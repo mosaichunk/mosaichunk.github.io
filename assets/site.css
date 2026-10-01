@@ -51,7 +51,7 @@ footer{max-width:var(--content-width);margin:80px auto 0;padding:28px 0 35px;bor
 @media(max-width:350px){.authors{font-size:10.5px;column-gap:3px}}
 
 /* Prose and figures share the same full-width content column. */
-:root{--copy-width:100%;--copy-size:22px;--copy-line-height:1.6}
+:root{--copy-width:100%;--copy-size:24px;--copy-line-height:1.6}
 .intro-copy,.section-lead,.figure-intro{
   width:100%;max-width:var(--copy-width);font-size:var(--copy-size);line-height:var(--copy-line-height);
   color:#424952;text-align:left;hyphens:none;
@@ -79,12 +79,12 @@ figcaption{max-width:var(--copy-width);text-align:left;font-size:var(--copy-size
 .benchmark-copy p{max-width:none;font-size:16px;line-height:1.75;color:#596574}
 .details-body p{max-width:none;font-size:17px;line-height:1.8;color:#535f6d}
 @media(max-width:800px){
-  :root{--copy-size:20px}
+  :root{--copy-size:22px}
   .intro-copy,.section-lead,.figure-intro{font-size:var(--copy-size);line-height:var(--copy-line-height)}
   .subsection-heading h3{font-size:23px}
 }
 @media(max-width:520px){
-  :root{--copy-size:18px;--page-gutter:15px}
+  :root{--copy-size:20px;--page-gutter:15px}
   .intro-copy,.section-lead,.figure-intro{font-size:var(--copy-size);line-height:var(--copy-line-height);text-align:left}
   .subsection-heading h3{font-size:21px}
   .benchmark-copy p,.details-body p{font-size:15px}
