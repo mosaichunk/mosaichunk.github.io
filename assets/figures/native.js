@@ -99,32 +99,37 @@
   const isCell=r=>r.tag==='rect'&&r.w>3&&r.w<4&&r.h>3&&r.h<4;
 
   function teaser(){
-    group('history',select(r=>r.y<176&&r.x<800),-1);
-    group('router',remaining(r=>r.tag==='rect'&&r.w>450&&r.y>200),0,.05,.2);
-    group('router-title',remaining(r=>r.tag==='img'&&r.y>215&&r.y<250&&r.x<470),0,.05,.2);
-    group('query-arrow',remaining(r=>r.tag!=='img'&&r.x>=470&&r.x<780&&r.y<240),0,.15,.75,true);
-    group('query-label',remaining(r=>r.tag==='img'&&r.x>500&&r.x<650&&r.y>180&&r.y<225),0,.05,.2);
-    group('select-arrows',remaining(r=>r.tag!=='img'&&r.x<470&&r.y>=176&&r.y<209),1,.08,.85,true);
-    group('select-label',remaining(r=>r.tag==='img'&&r.x<500&&r.y>=178&&r.y<210),1,0,.15);
+    const steps={history:0,query:1,select:2,visualize:3,compose:4,dit:5,output:6};
+    // Preserve the filmstrip artwork; reveal the five photographs in time order.
+    const frames=select(r=>r.tag==='image'&&r.y<176&&r.x<800).sort((a,b)=>a.x-b.x);
+    frames.forEach((frame,index)=>group(`history-frame-${index+1}`,[frame],steps.history,.04+index*.18,.16+index*.18));
+    group('history-filmstrip',remaining(r=>r.tag==='rect'&&r.y<176&&r.x<800),-1);
+    group('sliding-window',remaining(r=>r.y<176&&r.x<800),steps.query,0,.18);
+    group('router',remaining(r=>r.tag==='rect'&&r.w>450&&r.y>200),steps.query,.05,.2);
+    group('router-title',remaining(r=>r.tag==='img'&&r.y>215&&r.y<250&&r.x<470),steps.query,.05,.2);
+    group('query-arrow',remaining(r=>r.tag!=='img'&&r.x>=470&&r.x<780&&r.y<240),steps.query,.15,.75,true);
+    group('query-label',remaining(r=>r.tag==='img'&&r.x>500&&r.x<650&&r.y>180&&r.y<225),steps.query,.05,.2);
+    group('select-arrows',remaining(r=>r.tag!=='img'&&r.x<470&&r.y>=176&&r.y<209),steps.select,.08,.85,true);
+    group('select-label',remaining(r=>r.tag==='img'&&r.x<500&&r.y>=178&&r.y<210),steps.select,0,.15);
 
     // Claim both strokes together before the panel bounds split a plus sign
     // across neighboring KV groups with different reveal times.
-    group('kv-plus',remaining(r=>r.tag==='path'&&r.x<470&&r.y>250&&r.y<336),2,.25,.65);
+    group('kv-plus',remaining(r=>r.tag==='path'&&r.x<470&&r.y>250&&r.y<336),steps.visualize,.25,.65);
     const sourceCells=[];
     for(let i=0;i<3;i++){
       const entries=remaining(r=>r.tag!=='img'&&r.y>=250&&r.y<336&&r.x>=i*156&&r.x<(i+1)*156);
       sourceCells.push(entries.filter(isCell));
-      group(`kv-${i+1}`,entries,2,.05+i*.2,.3+i*.2);
+      group(`kv-${i+1}`,entries,steps.visualize,.05+i*.2,.3+i*.2);
     }
-    group('illustration-note',remaining(r=>r.tag==='img'&&r.x<470&&r.y>345),2,.7,.95);
-    group('compose-arrow',remaining(r=>r.tag!=='img'&&r.x>=470&&r.x<505&&r.y>250),3,.02,.2,true);
+    group('illustration-note',remaining(r=>r.tag==='img'&&r.x<470&&r.y>345),steps.visualize,.7,.95);
+    group('compose-arrow',remaining(r=>r.tag!=='img'&&r.x>=470&&r.x<505&&r.y>250),steps.compose,.02,.2,true);
     const destination=remaining(r=>isCell(r)&&r.x>=505&&r.x<650);
-    group('composed-kv',destination,3,.93,1);
-    group('mosaichunk-frame',remaining(r=>r.x>=505&&r.x<650&&r.y>250),3,.04,.2);
-    group('dit-input-arrow',remaining(r=>r.x>=650&&r.x<700),4,0,.25,true);
-    group('dit',remaining(r=>r.x>=700&&r.x<795),4,.12,.35);
-    group('output-arrow',remaining(r=>r.x>=795&&r.x<844),5,0,.25,true);
-    group('generated-frame',remaining(r=>r.x>=844),5,.28,.75);
+    group('composed-kv',destination,steps.compose,.93,1);
+    group('mosaichunk-frame',remaining(r=>r.x>=505&&r.x<650&&r.y>250),steps.compose,.04,.2);
+    group('dit-input-arrow',remaining(r=>r.x>=650&&r.x<700),steps.dit,0,.25,true);
+    group('dit',remaining(r=>r.x>=700&&r.x<795),steps.dit,.12,.35);
+    group('output-arrow',remaining(r=>r.x>=795&&r.x<844),steps.output,0,.25,true);
+    group('generated-frame',remaining(r=>r.x>=844),steps.output,.28,.75);
 
     // Each mask has exactly the same cell coordinates in its original panel
     // and the composed panel. Translation preserves that correspondence.
@@ -133,18 +138,18 @@
       const target=destination.filter(r=>r.el.getAttribute('fill')===fill);
       if(cells.length!==target.length)throw new Error('KV composition lost cells');
       const dx=target[0].x-cells[0].x;
-      movingCopy(cells,`compose-kv-${index+1}`,3,.08+index*.08,.75+index*.08,t=>
+      movingCopy(cells,`compose-kv-${index+1}`,steps.compose,.08+index*.08,.75+index*.08,t=>
         `translate(${dx*t},${8*Math.sin(Math.PI*t)})`);
       custom.push((stage,p)=>{
         const end=.75+index*.08;
-        const arrival=stage>3?1:stage===3?ease(interval(p,end-.065,end)):0;
+        const arrival=stage>steps.compose?1:stage===steps.compose?ease(interval(p,end-.065,end)):0;
         cells.forEach(({el})=>{
-          if(stage===3)opacity(el,1-.82*ease(interval(p,0,.1))+.82*ease(interval(p,.92,1)));
+          if(stage===steps.compose)opacity(el,1-.82*ease(interval(p,0,.1))+.82*ease(interval(p,.92,1)));
         });
         target.forEach(({el})=>opacity(el,arrival));
       });
     });
-    movingCopy(destination,'memory-into-dit',4,.25,.85,t=>{
+    movingCopy(destination,'memory-into-dit',steps.dit,.25,.85,t=>{
       const scale=1-.82*t;
       return `translate(${576+166*t},293.186) scale(${scale}) translate(-576,-293.186)`;
     },true);

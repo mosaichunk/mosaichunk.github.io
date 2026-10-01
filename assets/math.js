@@ -6,7 +6,7 @@
     'architecture-score': [['cₜ₋₁', 'c_{t-1}'], ['cₜ', 'c_t'], ['Q', '\\mathcal{Q}'], ['H', '\\mathcal{H}']],
     'architecture-compose': [['N', 'N'], ['cₜ', 'c_t']],
     'architecture-caption': [['N', 'N']],
-    'teaser-stage-3': [['cₜ', 'c_t']],
+    'teaser-stage-4': [['cₜ', 'c_t']],
     'architecture-stage-2': [['N', 'N'], ['cₜ', 'c_t']],
     'results-budget': [
       ['‖F_c‖ = 1', '\\lVert\\mathcal{F}_c\\rVert = 1'],

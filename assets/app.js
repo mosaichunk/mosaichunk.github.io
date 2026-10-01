@@ -29,6 +29,7 @@
   // selection shows that stage's result without starting an animation.
   const captions = {
   "teaser": [
+    "Autoregressive video models generate one chunk at a time, attending to cached keys and values (KV) from earlier chunks.",
     "Sections in the latest chunk query history outside the sliding window.",
     "High-scoring sections therefore retrieve historical content relevant to the latest chunk.",
     "We introduce MosaiChunk, a spatio-temporal memory mechanism that conditions a video generation model on composed historical KV sections (pink for the cookie, yellow for the tin, and gray for the background).",
@@ -54,7 +55,7 @@
     "Gradients pass through the student's frozen DiT and the section value weights to the descriptor encoder; they do not pass through the discrete section selection. The stored KV and backbone parameters remain unchanged."
   ]
 };
-  const durations={teaser:[2600,2400,3000,4300,3000,2600],motivation:[2600,3600,3200,2600],architecture:[4400,3400,4200],training:[3000,3000,2700,3200]};
+  const durations={teaser:[3400,2600,2400,3000,4300,3000,2600],motivation:[2600,3600,3200,2600],architecture:[4400,3400,4200],training:[3000,3000,2700,3200]};
   const figureControllers=new Map();
   $$('[data-animation]').forEach(card=>{
     const name=card.dataset.animation;
