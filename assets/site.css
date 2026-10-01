@@ -56,6 +56,7 @@ footer{max-width:calc(var(--max) - 48px);margin:80px auto 0;padding:28px 0 35px;
   width:100%;max-width:var(--copy-width);font-size:var(--copy-size);line-height:var(--copy-line-height);
   color:#424952;text-align:left;hyphens:none;
 }
+.intro-section .hero-figure{margin-bottom:32px}
 .intro-copy{margin:0 auto 24px}
 .section-lead{margin:24px auto 32px}
 .figure-intro{margin:0 auto 28px}
