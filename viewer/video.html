@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>MosaiChunk · Supplementary videos</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="icon" href="../assets/icon.svg?v=2" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/viewer-brand.css?v=20261001">
+  <script src="assets/scenes.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="page-header">
+      <div class="brand"><span class="wordmark"><img class="wordmark-icon" src="../assets/mosaic-emoji.svg?v=2" width="80" height="80" alt="" aria-hidden="true">MosaiChunk</span><span class="header-divider"></span><span>Supplementary videos</span></div>
+      <span class="collection-note">40 scenes · 2 memory budgets</span>
+    </header>
+    <main>
+      <section class="viewer-guide" aria-labelledby="instructions-title">
+        <h2 id="instructions-title">Instructions</h2>
+        <p>Choose a task, scene, and memory budget to compare synchronized rollouts. Below each video, the departure and revisit frames show the content before it leaves view and after it returns. <strong>CLIP ↑</strong> measures similarity between this frame pair; higher is better. The input prompt is collapsed at the bottom of the page. Due to space constraints, all videos were compressed while preserving the original frame rates and frame counts.</p>
+        <ul class="guide-controls" aria-label="Viewer controls">
+          <li><kbd>Space</kbd> Play / pause</li>
+          <li><kbd>A</kbd> / <kbd>D</kbd> Previous / next scene</li>
+          <li><strong>Drag the timeline</strong> to seek</li>
+          <li><strong>1× / 2× / 3×</strong> Playback speed</li>
+          <li><strong>Click frame pairs</strong> to enlarge</li>
+        </ul>
+      </section>
+      <div class="viewer-toolbar">
+        <nav class="dataset-tabs" aria-label="Video task">
+          <button type="button" data-dataset="t2v" aria-pressed="true">Text-to-video <span>20</span></button>
+          <button type="button" data-dataset="i2v" aria-pressed="false">Image-to-video <span>20</span></button>
+        </nav>
+        <div class="filters">
+          <label class="scene-control"><span>Scene</span><select id="scene-select" aria-label="Scene"></select></label>
+          <label><span>Far-memory budget</span><select id="budget" aria-label="Far-memory budget"><option value="1">1 chunk</option><option value="2" selected>2 chunks</option></select></label>
+        </div>
+      </div>
+      <div class="scene-heading">
+        <div><span class="scene-number" id="scene-number"></span><h1 id="scene-title"></h1></div>
+        <div class="scene-context"><span id="scene-type"></span><span class="dot">·</span><span id="trajectory"></span></div>
+      </div>
+      <section class="transport" aria-label="Synchronized video controls">
+        <button type="button" id="play-all" class="primary" aria-label="Play all videos"><span class="play-icon" aria-hidden="true">▶</span><span class="play-label">Play all</span></button>
+        <button type="button" id="restart" class="quiet" aria-label="Restart all videos" title="Restart all">↺</button>
+        <div class="master-progress"><input id="master-seek" type="range" min="0" max="1" value="0" step="0.001" aria-label="Seek all videos"><output id="master-time">0.00 / 0.00 s</output></div>
+        <div class="speed-switch" role="group" aria-label="Playback speed"><button type="button" data-rate="1" aria-pressed="false">1×</button><button type="button" data-rate="2" aria-pressed="true">2×</button><button type="button" data-rate="3" aria-pressed="false">3×</button></div>
+        <label class="sync-toggle"><input type="checkbox" id="sync" checked>Sync videos</label>
+      </section>
+      <div id="status" role="status" aria-live="polite"></div>
+      <section id="comparison" class="comparison" aria-label="Method comparison"></section>
+      <nav class="pagination" aria-label="Scene pagination">
+        <button type="button" id="previous" class="page-button">← Previous</button>
+        <span id="page-count"></span>
+        <button type="button" id="next" class="page-button">Next →</button>
+      </nav>
+      <p class="notes">All methods use the same total active KV budget. CLIP scores use the original evaluation frames.</p>
+      <details id="prompt-details"><summary>Input prompt</summary><div id="prompt-content"></div></details>
+    </main>
+  </div>
+  <dialog id="pair-dialog" aria-labelledby="pair-dialog-title">
+    <div class="dialog-heading"><h2 id="pair-dialog-title"></h2><button type="button" id="close-pair" aria-label="Close enlarged frame pair">×</button></div>
+    <div id="enlarged-pair" class="enlarged-pair"></div>
+  </dialog>
+  <noscript>This local video viewer requires JavaScript to synchronize playback and switch scenes.</noscript>
+</body>
+</html>

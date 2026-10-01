@@ -1,0 +1,10 @@
+/* Match the project title while keeping the supplementary viewer's layout. */
+@font-face{font-family:Inter;src:local('Inter');font-display:swap}
+.wordmark{display:inline-flex;align-items:center;gap:.16em;font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-style:normal;font-weight:800;line-height:1.16;letter-spacing:-.03333em;color:#282b30;white-space:nowrap;flex-shrink:0;-webkit-font-smoothing:antialiased}
+.wordmark-icon{display:block;width:1.08em;height:1.08em;flex:none}
+@media(max-width:520px){
+  .page-header{height:auto;min-height:83px;padding:14px 0}
+  .brand{flex-wrap:wrap;row-gap:5px}
+  .brand>span:last-child{flex-basis:100%;font-size:14px}
+  .header-divider{display:none}
+}

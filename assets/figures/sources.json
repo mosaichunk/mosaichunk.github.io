@@ -1,0 +1,26 @@
+{
+  "teaser": {
+    "source": "teaser.html",
+    "sha256": "e02b628fa6b20794a9bbe03996ab306b7eb879109cfced9603c970c0b6600b9e",
+    "width": 1043,
+    "height": 401
+  },
+  "motivation": {
+    "source": "figure_redesign/figure3/figure3_kv_reuse.svg",
+    "sha256": "e2e5f236562822acb85cac8a87279e74afc77aaa1a5d689e680559661b373ac4",
+    "width": 1524,
+    "height": 464
+  },
+  "architecture": {
+    "source": "figure_redesign/figure4/figure4_memory_architecture_large.svg",
+    "sha256": "ed91f25f769dd0398e5d363cc86d8ac3f1284944225ed4fe38e0c1492b8f3972",
+    "width": 1348,
+    "height": 550
+  },
+  "training": {
+    "source": "figure_redesign/figure5/figure5_training_pipeline_parallel.svg",
+    "sha256": "50165de00fb71cf84bef721f20c73c5c69bd61a5d2eab56a2d61f59433e79e97",
+    "width": 1206,
+    "height": 522
+  }
+}

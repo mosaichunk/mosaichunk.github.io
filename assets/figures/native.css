@@ -1,0 +1,3 @@
+/* The figure is assembled progressively; there is no decorative flow overlay. */
+#paper-canvas{visibility:hidden}
+[data-operation],[data-motion]{pointer-events:none}

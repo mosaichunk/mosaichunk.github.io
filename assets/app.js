@@ -1,0 +1,423 @@
+/* Scientific copy comes from the manuscript;
+ * charts also include the labelled completed fractional-budget evaluations.
+ */
+(() => {
+  'use strict';
+  const DATA = window.PAPER_DATA;
+  const $ = (q, root=document) => root.querySelector(q);
+  const $$ = (q, root=document) => [...root.querySelectorAll(q)];
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = (tag, attrs={}, text='') => {
+    const el = document.createElementNS(NS, tag);
+    Object.entries(attrs).forEach(([key,value]) => el.setAttribute(key, value));
+    if (text) el.textContent = text;
+    return el;
+  };
+  const pressed = (buttons, active) => buttons.forEach(b => b.setAttribute('aria-pressed',String(b===active)));
+  const displayMethod = name => name === 'Ours' || name === 'mc' ? 'MosaiChunk' : name;
+  const methodClass = name => /Ours|MosaiChunk|^mc$/.test(name) ? 'ours' : /MoC|^moc$/.test(name) ? 'moc' : 'base';
+  const methodColor = name => ({ours:'#478b6a',moc:'#bc8793',base:'#9fa9b6'})[methodClass(name)];
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function bindSelection(id, onChange){
+    const group=$('#'+id);
+    $$('button',group).forEach(button=>button.addEventListener('click',()=>{
+      pressed($$('button',group),button);onChange(button.dataset.value);
+    }));
+  }
+  // Start with the complete figure. Play reveals its stages in order; a manual
+  // selection shows that stage's result without starting an animation.
+  const captions = {
+  "teaser": [
+    "Sections in the latest chunk query history outside the sliding window.",
+    "High-scoring sections therefore retrieve historical content relevant to the latest chunk.",
+    "We introduce MosaiChunk, a spatio-temporal memory mechanism that conditions a video generation model on composed historical KV sections (pink for the cookie, yellow for the tin, and gray for the background).",
+    "We then concatenate their KV into a MosaiChunk, which serves as far memory for chunk cₜ.",
+    "The frozen DiT reads the MosaiChunk alongside the sliding window.",
+    "The frozen video generator preserves the cookie's appearance when the tin opens again."
+  ],
+  "motivation": [
+    "We retain a copy of an earlier chunk's KV before eviction and manually mark the cookie region in one frame.",
+    "We map this region to latent positions and select the corresponding cached keys and values.",
+    "We map this region to latent positions and select the corresponding cached keys and values. We supply them alongside the sliding window when the tin opens again.",
+    "The frozen video generator preserves the cookie's appearance when the tin opens again."
+  ],
+  "architecture": [
+    "Each chunk is partitioned into sections and each section is encoded into a descriptor.",
+    "The score measures a candidate's highest descriptor similarity to any query section.",
+    "The router ranks all candidate sections together and selects the global top-N. We then concatenate their KV into a MosaiChunk, which serves as far memory for chunk cₜ."
+  ],
+  "training": [
+    "The teacher receives whole historical chunks that fully cover the historical content to be redrawn. We identify these chunks from the input prompt schedule for T2V models or matching input camera poses for I2V models.",
+    "The student receives the router's MosaiChunk under a smaller memory budget. It must therefore select useful sections rather than copy all of the teacher's context.",
+    "We minimize the mean squared error (MSE) between teacher and student predictions. Teacher predictions are fixed targets.",
+    "Gradients pass through the student's frozen DiT and the section value weights to the descriptor encoder; they do not pass through the discrete section selection. The stored KV and backbone parameters remain unchanged."
+  ]
+};
+  const durations={teaser:[2600,2400,3000,4300,3000,2600],motivation:[2600,3600,3200,2600],architecture:[4400,3400,4200],training:[3000,3000,2700,3200]};
+  const figureControllers=new Map();
+  $$('[data-animation]').forEach(card=>{
+    const name=card.dataset.animation;
+    const buttons=$$('[data-step]',card),iframe=$('iframe',card),play=$('[data-play]',card);
+    const overviewCaption=$('[data-stage-caption]',card)?.textContent;
+    let overview=true,stage=buttons.length-1,progress=1,running=false,raf=0,last=0;
+    const finished=()=>stage===buttons.length-1&&progress>=1;
+    const send=()=>iframe.contentWindow?.postMessage({type:'paper-figure-stage',stage,progress:reducedMotion.matches?1:progress},location.origin==='null'?'*':location.origin);
+    const render=()=>{
+      pressed(buttons,overview?null:buttons[stage]);
+      play.innerHTML=running?'Ⅱ <span>Pause</span>':!overview&&finished()?'↻ <span>Replay</span>':'▶ <span>Play</span>';
+      play.setAttribute('aria-label',`${running?'Pause':!overview&&finished()?'Replay':'Play'} ${name} animation`);
+      const caption=$('[data-stage-caption]',card);if(caption){caption.textContent=overview?overviewCaption:captions[name][stage];caption.dataset.paperCopy=overview?`${name}-caption`:`${name}-stage-${stage}`;window.PAPER_MATH.render(caption);}
+      const equation=$('[data-stage-equation]',card);
+      if(equation){equation.hidden=overview;if(overview)equation.replaceChildren();else window.PAPER_MATH.renderEquation(equation,stage);}
+      card.dataset.view=overview?'overview':'stage';
+      card.dataset.stage=String(stage);send();
+    };
+    const pause=()=>{running=false;cancelAnimationFrame(raf);last=0;render();};
+    function tick(now){
+      if(!running)return;
+      if(last)progress+=Math.min(now-last,100)/durations[name][stage];
+      last=now;
+      if(progress>=1){
+        progress=1;send();
+        if(stage===buttons.length-1)return pause();
+        stage++;progress=0;render();
+      }else send();
+      raf=requestAnimationFrame(tick);
+    }
+    play.addEventListener('click',()=>{
+      if(running)return pause();
+      if(overview||finished()){stage=0;progress=0;}
+      else if(progress>=1)progress=0;
+      overview=false;running=true;last=0;render();raf=requestAnimationFrame(tick);
+    });
+    buttons.forEach((button,index)=>button.addEventListener('click',()=>{
+      overview=false;stage=index;progress=1;pause();
+    }));
+    $('[data-reset]',card).addEventListener('click',()=>{overview=true;stage=buttons.length-1;progress=1;pause();});
+    iframe.addEventListener('load',send);
+    figureControllers.set(iframe.contentWindow,{send,pause,card});
+    new IntersectionObserver(entries=>{if(!entries[0].isIntersecting&&running)pause();},{threshold:.08}).observe(card);
+    render();
+  });
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)figureControllers.forEach(controller=>controller.pause());});
+  window.addEventListener('message',event=>{
+    if(event.data?.type==='paper-figure-ready')figureControllers.get(event.source)?.send();
+  });
+
+  const dialog=$('#image-dialog');
+  function enlarge(url,label){$('img',dialog).src=url;$('img',dialog).alt=label;$('p',dialog).textContent=label;dialog.showModal();}
+  $('#close-dialog').addEventListener('click',()=>dialog.close());
+  dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+
+  // Benchmark inputs: actual first frames and a schematic of the commanded
+  // camera path. Reconstructed evaluation poses are not implied by this view.
+  function renderBenchmark(task){
+    const isT2V=task==='t2v';
+    $('#benchmark-input').textContent=isT2V?'Prompt':'Initial frame, prompt, and camera trajectory';
+    $('#benchmark-split-intro').textContent=isT2V
+      ? "The split contains 100 samples with scenarios disjoint from router training. Each model input extends Ring Forcing's three-stage appear–disappear–reappear design to four prompt segments, with a separate segment keeping the object out of sight. The nominal prompt transitions occur at 3.6, 6.2, and 11.2 seconds. The third segment therefore requests five seconds with the object out of sight, exceeding the largest sliding-window baseline's approximately three seconds of recent context."
+      : "The split contains 150 scenes: 50 indoor and 100 outdoor. Each model input includes an initial frame from DL3DV, a prompt describing the scene, and a camera trajectory. We sample more diverse camera trajectories not seen during training: all 150 scenes have in-place rotation trajectories with 90°, 180°, and 360° settings. The 100 outdoor scenes additionally have trajectories combining these rotations with translation. For 90° and 180°, yaw increases linearly to the specified angle at the midpoint and then reverses to its initial value. The 360° trajectory instead completes one continuous full turn. Each input camera trajectory ends at its initial position and orientation.";
+    $('#benchmark-split-intro').dataset.paperCopy=`benchmark-${task}`;
+    $('#contact-caption').dataset.paperCopy=`contact-${task}`;
+    $('.benchmark-detail').dataset.task=task;
+    $('#prompt-interaction').hidden=!isT2V;$('#camera-interaction').hidden=isT2V;
+    if(isT2V)pauseCamera();else playCamera(true,true);
+    $('#contact-caption').textContent=isT2V?"Model-generated frames from the T2V split when the prompt first reveals the object. Sixteen scenes are sampled at random from each split.":"Conditioning frames from the I2V split, taken from the first frames of DL3DV videos. Sixteen scenes are sampled at random from each split.";
+    $('#contact-sheet').replaceChildren(...DATA.benchmark[task].map(item=>{
+      const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Enlarge ${item.label.toLowerCase()}`);
+      const im=document.createElement('img');im.src=item.image;im.alt=item.label;im.loading='lazy';b.append(im);
+      b.addEventListener('click',()=>enlarge(item.image,item.label));return b;
+    }));
+  }
+  $$('#benchmark-tabs button').forEach(button=>button.addEventListener('click',()=>{pressed($$('#benchmark-tabs button'),button);renderBenchmark(button.dataset.task);}));
+  const beatIndices=[0,1,2,4];
+  const promptFrame=DATA.qualitative[0].rows.find(r=>r.method==='MosaiChunk').frames;
+  $$('.prompt-preview').forEach((button,i)=>{
+    const image=$('img',button);image.src=promptFrame[beatIndices[i]];
+    button.addEventListener('click',()=>enlarge(image.src,`Prompt segment ${i+1} · ${image.alt}`));
+  });
+
+  const cameraSlider=$('#camera-progress'),cameraPlay=$('#camera-play');
+  let cameraAngle=180,cameraProgress=0,cameraRunning=false,cameraFrame=0,cameraLastTime=null;
+  const cameraDuration=4000;
+  function renderCamera(){
+    const t=cameraProgress;
+    const angle=cameraAngle;
+    const progress=angle===360?t:1-Math.abs(2*t-1);
+    const yaw=angle*progress;
+    const translation=$('#camera-translation').checked?185*(1-Math.abs(2*t-1)):0;
+    $('#camera-pose').setAttribute('transform',`translate(${115+translation} 76) rotate(${-yaw})`);
+    $('#camera-path').style.opacity=$('#camera-translation').checked?'1':'.2';
+    $('#camera-svg').setAttribute('aria-label',`Schematic ${angle} degree input trajectory, ${Math.round(t*100)} percent complete${$('#camera-translation').checked?', with translation':''}`);
+    cameraSlider.value=String(t*100);
+  }
+  function renderCameraPlayback(){
+    const label=cameraRunning?'Pause':cameraProgress>=1?'Replay':'Play';
+    cameraPlay.innerHTML=`${cameraRunning?'Ⅱ':cameraProgress>=1?'↻':'▶'} <span>${label}</span>`;
+    cameraPlay.setAttribute('aria-label',`${label} camera trajectory`);
+  }
+  function pauseCamera(){
+    cameraRunning=false;cancelAnimationFrame(cameraFrame);cameraLastTime=null;
+    renderCameraPlayback();
+  }
+  function tickCamera(now){
+    if(!cameraRunning)return;
+    if(cameraLastTime!==null)cameraProgress=Math.min(1,cameraProgress+Math.min(now-cameraLastTime,100)/cameraDuration);
+    cameraLastTime=now;renderCamera();
+    if(cameraProgress>=1)return pauseCamera();
+    cameraFrame=requestAnimationFrame(tickCamera);
+  }
+  function playCamera(restart=false,automatic=false){
+    pauseCamera();
+    if(restart||cameraProgress>=1)cameraProgress=0;
+    renderCamera();renderCameraPlayback();
+    // Reduced-motion visitors can start playback explicitly. Switching away
+    // cancels the same timeline, so returning never creates a second loop.
+    if($('#camera-interaction').hidden||document.hidden||(automatic&&reducedMotion.matches))return;
+    cameraRunning=true;renderCameraPlayback();cameraFrame=requestAnimationFrame(tickCamera);
+  }
+  cameraPlay.addEventListener('click',()=>{if(cameraRunning)pauseCamera();else playCamera();});
+  cameraSlider.addEventListener('input',()=>{cameraProgress=Number(cameraSlider.value)/100;pauseCamera();renderCamera();});
+  $('#camera-translation').addEventListener('change',()=>playCamera(true,true));
+  bindSelection('camera-angle',value=>{cameraAngle=Number(value);playCamera(true,true);});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseCamera();});
+  reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)pauseCamera();});
+
+  const state={task:'t2v',trajectory:'rotation'};
+  const resultKey=()=>state.task==='t2v'?'t2v':state.trajectory;
+  function renderResults(){
+    const rows=DATA.results[resultKey()];
+    $('#trajectory-control').hidden=state.task==='t2v';
+    $('#result-cohort').textContent=state.task==='t2v'?'100 T2V scenes · H3-AR':`${state.trajectory==='rotation'?150:100} I2V scenes · LingBot-World-Infinity`;
+    // Integer budgets use the paper tables; fractional MosaiChunk points use
+    // the completed evaluations on the same scene cohort.
+    const fractional=DATA.fractionalResults[resultKey()];
+    $('#budget-coverage-note').textContent=resultKey()==='translation'
+      ? 'The 0.5- and 1.5-chunk measurements extend the paper’s evaluation to rotation with translation, using the same protocol.'
+      : 'The 0.5- and 1.5-chunk LPIPS measurements extend the paper’s budget sweep using the same evaluation protocol.';
+    const readout=$('#metric-readout');
+    const defaultReadout='Hover or focus a point for its method, memory budget, and score.';
+    readout.textContent=defaultReadout;
+    const metrics=[
+      {key:'clip',index:0,min:.70,max:1,ticks:[.70,.80,.90,1]},
+      {key:'lpips',index:1,min:.48,max:.68,ticks:[.50,.55,.60,.65]}
+    ];
+    metrics.forEach(metric=>{
+      const chart=$(`[data-chart-metric="${metric.key}"]`);chart.replaceChildren();
+      const left=48,right=424,top=14,bottom=156;
+      const x=budget=>left+(budget-.5)/1.5*(right-left);
+      const y=value=>bottom-(value-metric.min)/(metric.max-metric.min)*(bottom-top);
+      metric.ticks.forEach(value=>{
+        chart.append(svg('line',{x1:left,x2:right,y1:y(value),y2:y(value),stroke:'#e9edf0'}),svg('text',{x:left-10,y:y(value)+4,'text-anchor':'end',fill:'#8c98a3','font-size':12},value.toFixed(2)));
+      });
+      [.5,1,1.5,2].forEach(budget=>{
+        chart.append(svg('line',{x1:x(budget),x2:x(budget),y1:top,y2:bottom,stroke:'#f0f2f4'}),svg('text',{x:x(budget),y:184,'text-anchor':'middle',fill:'#7d8995','font-size':13},String(budget)));
+      });
+      const series=rows.map(row=>({method:row.method,points:[
+        [1,row.values[metric.index]],[2,row.values[4+metric.index]],
+        ...(row.method==='Ours'?fractional[metric.key]:[])
+      ].sort((a,b)=>a[0]-b[0])}));
+      // Lines guide the eye between measured points. No fractional Base or MoC
+      // results are synthesized or plotted.
+      series.forEach(({method,points})=>{
+        chart.append(svg('polyline',{
+          points:points.map(([budget,value])=>`${x(budget)},${y(value)}`).join(' '),
+          fill:'none',stroke:methodColor(method),'stroke-width':method==='Ours'?2.8:2,
+          'stroke-dasharray':method==='Base'?'6 5':'none','stroke-linejoin':'round'
+        }));
+      });
+      series.forEach(({method,points})=>points.forEach(([budget,value])=>{
+          const label=`${displayMethod(method)} · ${budget} ${budget===1?'chunk':'chunks'} · ${metric.key.toUpperCase()} ${value.toFixed(3)}`;
+          const point=svg('circle',{cx:x(budget),cy:y(value),r:5,fill:methodColor(method),stroke:'white','stroke-width':1.5,tabindex:0,role:'img','aria-label':label,'data-method':method,'data-budget':budget,'data-value':value.toFixed(3)});
+          point.append(svg('title',{},label));
+          const show=()=>{readout.textContent=label;point.setAttribute('r','7');};
+          const clear=()=>{readout.textContent=defaultReadout;point.setAttribute('r','5');};
+          point.addEventListener('mouseenter',show);point.addEventListener('focus',show);point.addEventListener('mouseleave',clear);point.addEventListener('blur',clear);
+          chart.append(point);
+      }));
+      chart.setAttribute('aria-label',`${metric.key.toUpperCase()} versus far-memory budget in chunks, absolute score axis ${metric.min} to ${metric.max}. ${series.map(({method,points})=>`${displayMethod(method)}: ${points.map(([budget,value])=>`${budget} chunks ${value.toFixed(3)}`).join(', ')}`).join('; ')}`);
+    });
+  }
+  $$('#result-tabs button').forEach(button=>button.addEventListener('click',()=>{
+    pressed($$('#result-tabs button'),button);state.task=button.dataset.task;renderResults();
+  }));
+  bindSelection('result-trajectory',value=>{state.trajectory=value;renderResults();});
+
+  const videoBudget=2;
+  const qualState={task:'t2v',page:{t2v:0,i2v:0}};
+  $$('#qual-tabs button').forEach(button=>button.addEventListener('click',()=>{
+    if(button.dataset.task===qualState.task)return;
+    const direction=button.dataset.task==='i2v'?1:-1;
+    pressed($$('#qual-tabs button'),button);qualState.task=button.dataset.task;transitionVideos(direction);
+  }));
+
+  let videos=[],videoItems=[],videoEpoch=0,playing=false,syncTimer=null;
+  let carouselMoving=false,carouselDirection=1,carouselAnimations=[];
+  let renderedTask=null,renderedPage=0;
+  function pauseVideos(){playing=false;clearInterval(syncTimer);syncTimer=null;videos.forEach(v=>v.pause());$('#video-play').innerHTML='▶ <span>Play all</span>';}
+  // Five explicit examples per split, drawn from the original video viewer.
+  // The quantitative controls are independent of this qualitative carousel.
+  const featured={t2v:['t2v-11','t2v-01','t2v-04','t2v-14','t2v-17'],i2v:['i2v-01','i2v-02','i2v-03','i2v-11','i2v-20']};
+  function pageScene(offset=0,task=qualState.task,page=qualState.page[task]){
+    const ids=featured[task],index=(page+offset+ids.length)%ids.length;
+    return DATA.scenes.find(scene=>scene.id===ids[index]);
+  }
+  function turnPage(direction){
+    const count=featured[qualState.task].length;
+    qualState.page[qualState.task]=(qualState.page[qualState.task]+direction+count)%count;
+    transitionVideos(direction);
+  }
+  async function transitionVideos(direction){
+    carouselDirection=direction;
+    // Finish the current slide before following the latest requested page.
+    // Rapid clicks never replace the moving cards halfway through a gesture.
+    if(carouselMoving)return;
+    const task=qualState.task,page=qualState.page[task];
+    if(task===renderedTask&&page===renderedPage)return;
+    pauseVideos();++videoEpoch;
+    if($('#pair-dialog').open)$('#pair-dialog').close();
+    if(reducedMotion.matches){renderVideos();return;}
+    const slide=$('#video-slide'),track=$('.carousel-track'),carousel=$('.video-carousel');
+    const incoming=$('#video-peek-'+(direction>0?'next':'prev'));
+    renderPreview(incoming,pageScene(0,task,page));
+    // A fourth card enters at the far edge, so the next side preview also
+    // moves into place instead of appearing after the animation finishes.
+    const extra=document.createElement('button');extra.className='video-comparison carousel-peek carousel-extra';
+    extra.setAttribute('aria-hidden','true');extra.inert=true;
+    renderPreview(extra,pageScene(direction,task,page));
+    const gap=parseFloat(getComputedStyle(track).columnGap);
+    const step=slide.offsetWidth+gap,gutter=(carousel.clientWidth-slide.offsetWidth)/2;
+    const base=gutter-step,from=base-(direction<0?step:0);
+    if(direction>0)track.append(extra);else track.prepend(extra);
+    carouselMoving=true;carousel.inert=true;slide.inert=true;
+    slide.dataset.transition='slide';slide.setAttribute('aria-busy','true');
+    const timing={duration:720,easing:'cubic-bezier(.4,0,.2,1)',fill:'both'};
+    try{
+      carouselAnimations=[
+        track.animate([{transform:`translateX(${from}px)`},{transform:`translateX(${from-direction*step}px)`}],timing),
+        slide.animate([{opacity:1,transform:'scale(1)'},{opacity:.42,transform:'scale(.95)'}],timing),
+        incoming.animate([{opacity:getComputedStyle(incoming).opacity,transform:'scale(.95)'},{opacity:1,transform:'scale(1)'}],timing)
+      ];
+      await Promise.all(carouselAnimations.map(animation=>animation.finished));
+    }catch(error){
+      if(error.name!=='AbortError')throw error;
+    }finally{
+      carouselAnimations.forEach(animation=>animation.cancel());carouselAnimations=[];extra.remove();
+      renderVideos(task,page);
+      carouselMoving=false;carousel.inert=false;slide.inert=false;
+      slide.removeAttribute('aria-busy');delete slide.dataset.transition;
+      if(qualState.task!==renderedTask||qualState.page[qualState.task]!==renderedPage)transitionVideos(carouselDirection);
+    }
+  }
+  // Settle a moving track before its responsive dimensions change.
+  window.addEventListener('resize',()=>carouselAnimations.forEach(animation=>animation.finish()));
+  reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)carouselAnimations.forEach(animation=>animation.finish());});
+  function renderPreview(button,scene){
+    if(button.dataset.scene===scene.id)return;
+    button.dataset.scene=scene.id;
+    if(!button.classList.contains('carousel-extra'))button.setAttribute('aria-label',`${button.id.endsWith('prev')?'Previous':'Next'} video example: ${scene.title}`);
+    // Static posters share the live card's layout; neighboring cards do not
+    // create or load additional video players.
+    button.innerHTML='<div class="scrub-controls" aria-hidden="true"><span class="play-button">▶ <span>Play all</span></span><span class="preview-progress"></span><span class="small-note">0.0 s</span><span class="subtle-button">Revisit frames</span></div><div class="videos"></div><div class="video-prompt"><span class="preview-prompt-label">Show prompt</span></div>';
+    $('.videos',button).replaceChildren(...buildVideoCards(scene,false));
+  }
+  function renderVideos(task=qualState.task,page=qualState.page[task]){
+    pauseVideos();++videoEpoch;
+    if($('#pair-dialog').open)$('#pair-dialog').close();
+    // Unload the previous three movies when changing the scene or split.
+    videos.forEach(video=>{video.removeAttribute('src');video.load();});
+    const scene=pageScene(0,task,page),count=featured[task].length;
+    renderedTask=task;renderedPage=page;
+    $('#video-title').textContent=scene.title;
+    $('#video-page').textContent=`${String(page+1).padStart(2,'0')} / ${String(count).padStart(2,'0')}`;
+    $('#video-slide').setAttribute('aria-label',`Example ${page+1} of ${count}: ${scene.title}`);
+    $('#video-pages').replaceChildren(...featured[task].map((id,i)=>{
+      const button=document.createElement('button');button.setAttribute('aria-label',`Video example ${i+1}`);button.setAttribute('aria-pressed',String(i===page));
+      button.addEventListener('click',()=>{
+        if(i===qualState.page[qualState.task])return;
+        const direction=i>qualState.page[qualState.task]?1:-1;
+        qualState.page[qualState.task]=i;transitionVideos(direction);
+      });return button;
+    }));
+    [-1,1].forEach(offset=>{
+      renderPreview($(`#video-peek-${offset<0?'prev':'next'}`),pageScene(offset,task,page));
+    });
+    $('#video-prompt-text').replaceChildren(...scene.prompts.map(text=>{const p=document.createElement('p');p.textContent=text;return p;}));
+    $('#video-slide .video-prompt').open=false;
+    videoItems=[...scene.budgets[String(videoBudget)]].sort((a,b)=>['mc','moc','base'].indexOf(a.method)-['mc','moc','base'].indexOf(b.method));
+    $('#video-setting').textContent=`${videoBudget}-chunk far memory · ${scene.trajectoryLabel}`;
+    $('#videos').replaceChildren(...buildVideoCards(scene,true));
+    videos=$$('#videos video');$('#video-progress').value='0';$('#video-time').textContent='0.0 s';
+    videos[0].addEventListener('timeupdate',()=>{if(playing){$('#video-progress').value=String(videos[0].currentTime/videoItems[0].duration*1000);$('#video-time').textContent=videos[0].currentTime.toFixed(1)+' s';}});
+  }
+  function buildVideoCards(scene,interactive){
+    return [...scene.budgets[String(videoBudget)]].sort((a,b)=>['mc','moc','base'].indexOf(a.method)-['mc','moc','base'].indexOf(b.method)).map(item=>{
+      const card=document.createElement('div');card.className=`video-item ${methodClass(item.method)}`;
+      const label=document.createElement('div');label.className='video-label';const title=document.createElement('b');title.textContent=item.label;const score=document.createElement('span');score.textContent=`CLIP ↑ ${item.clipScore.toFixed(3)}`;label.append(title,score);
+      const video=document.createElement(interactive?'video':'img');
+      if(interactive){
+        video.muted=true;video.playsInline=true;video.preload='none';video.poster='viewer/'+item.departureImage;video.src='viewer/'+item.video;
+        video.setAttribute('aria-label',`${item.label}, ${scene.title}`);video.addEventListener('ended',()=>{if(playing)pauseVideos();});
+      }else{video.className='preview-video';video.src='viewer/'+item.departureImage;video.alt='';}
+      // Reuse the viewer's exact evaluation images and original frame times.
+      // Each method keeps its own revisit; frames are never shared across runs.
+      const pair=document.createElement('div');pair.className='pair-grid';
+      ['departure','revisit'].forEach(kind=>{
+        const button=document.createElement(interactive?'button':'span');button.className='pair-button';button.dataset.kind=kind;
+        if(interactive){button.type='button';button.setAttribute('aria-label',`Enlarge ${item.label} departure and revisit frames`);}
+        const caption=document.createElement('span');caption.className='frame-label';
+        const name=document.createElement('span');name.textContent=kind==='departure'?'Departure':'Revisit';
+        const time=document.createElement('span');time.className='frame-time';time.textContent=`${(item[kind+'Frame']/item.fps).toFixed(2)} s`;
+        caption.append(name,time);
+        const image=document.createElement('img');image.src='viewer/'+item[kind+'Image'];image.alt=`${scene.title} — ${item.label} ${kind} frame`;image.decoding='async';
+        image.style.aspectRatio=`${item.width} / ${item.height}`;
+        button.append(caption,image);if(interactive)button.addEventListener('click',()=>openPair(item,scene));pair.append(button);
+      });
+      card.dataset.method=item.method;card.append(label,video,pair);return card;
+    });
+  }
+  function openPair(item,scene){
+    pauseVideos();
+    $('#pair-dialog-title').textContent=`${scene.title} · ${item.label} · CLIP ${item.clipScore.toFixed(3)}`;
+    $('#enlarged-pair').replaceChildren(...['departure','revisit'].map(kind=>{
+      const figure=document.createElement('figure'),caption=document.createElement('figcaption'),image=document.createElement('img');
+      caption.textContent=`${kind==='departure'?'Departure':'Revisit'} · ${(item[kind+'Frame']/item.fps).toFixed(2)} s · frame ${item[kind+'Frame']}`;
+      image.src='viewer/'+item[kind+'Image'];image.alt=`${scene.title} — ${item.label} ${kind} frame`;
+      figure.append(caption,image);return figure;
+    }));
+    $('#pair-dialog').showModal();
+  }
+  $('#close-pair').addEventListener('click',()=>$('#pair-dialog').close());
+  $('#pair-dialog').addEventListener('click',event=>{if(event.target===$('#pair-dialog'))$('#pair-dialog').close();});
+  function ready(video){return video.readyState>=1?Promise.resolve():new Promise((resolve,reject)=>{video.addEventListener('loadedmetadata',resolve,{once:true});video.addEventListener('error',reject,{once:true});video.load();});}
+  async function seekVideos(times){
+    const epoch=videoEpoch, targets=videos.slice();
+    await Promise.all(targets.map(ready));if(epoch!==videoEpoch)return;
+    targets.forEach((v,i)=>{v.currentTime=Math.max(0,Math.min(times[i],v.duration-.05));});
+  }
+  $('#video-play').addEventListener('click',async()=>{
+    if(playing)return pauseVideos();
+    const epoch=videoEpoch;
+    $('#video-play').innerHTML='… <span>Loading</span>';
+    try{
+      await Promise.all(videos.map(ready));if(epoch!==videoEpoch)return;
+      const time=videos[0].ended?0:videos[0].currentTime;
+      videos.forEach(v=>v.currentTime=Math.min(time,v.duration-.05));
+      await Promise.all(videos.map(v=>v.play()));if(epoch!==videoEpoch)return;
+      playing=true;$('#video-play').innerHTML='Ⅱ <span>Pause</span>';
+      syncTimer=setInterval(()=>{if(!playing)return;const master=videos[0];videos.slice(1).forEach(v=>{if(Math.abs(v.currentTime-master.currentTime)>.15)v.currentTime=Math.min(master.currentTime,v.duration-.05);});},400);
+    }catch{if(epoch!==videoEpoch)return;pauseVideos();$('#video-time').textContent='Could not load video';}
+  });
+  $('#video-progress').addEventListener('input',async()=>{pauseVideos();const time=Number($('#video-progress').value)/1000*videoItems[0].duration;$('#video-time').textContent=time.toFixed(1)+' s';try{await seekVideos(videos.map(()=>time));}catch{$('#video-time').textContent='Could not load video';}});
+  $('#video-revisit').addEventListener('click',async()=>{pauseVideos();try{await seekVideos(videoItems.map(v=>v.revisitFrame/v.fps));$('#video-time').textContent='Revisit';$('#video-progress').value=String(videoItems[0].revisitFrame/videoItems[0].frames*1000);}catch{$('#video-time').textContent='Could not load video';}});
+  $('#video-prev').addEventListener('click',()=>turnPage(-1));
+  $('#video-next').addEventListener('click',()=>turnPage(1));
+  $('#video-peek-prev').addEventListener('click',()=>turnPage(-1));
+  $('#video-peek-next').addEventListener('click',()=>turnPage(1));
+  new IntersectionObserver(entries=>{if(!entries[0].isIntersecting)pauseVideos();},{threshold:.05}).observe($('#video-slide'));
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseVideos();});
+
+  renderBenchmark('t2v');renderCamera();renderResults();renderVideos();
+  window.PAPER_MATH.render(document);
+})();

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80" fill="none">
+  <defs>
+    <filter id="lift" x="-25%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation=".7" flood-color="#30274d" flood-opacity=".16"/>
+    </filter>
+  </defs>
+  <g filter="url(#lift)">
+    <rect x="7" y="9" width="19" height="19" rx="5" fill="#FFCE4C"/>
+    <rect x="29" y="5" width="23" height="23" rx="6" fill="#FF766B"/>
+    <rect x="56" y="12" width="18" height="18" rx="5" fill="#A38CF4"/>
+    <rect x="6" y="32" width="24" height="21" rx="6" fill="#55AAE9"/>
+    <rect x="34" y="32" width="18" height="18" rx="5" fill="#65C596"/>
+    <rect x="56" y="34" width="18" height="24" rx="5" fill="#F58DB8"/>
+    <rect x="8" y="57" width="19" height="17" rx="5" fill="#A38CF4"/>
+    <rect x="31" y="54" width="22" height="21" rx="6" fill="#FFAC54"/>
+    <rect x="57" y="62" width="17" height="13" rx="4" fill="#4BB8B0"/>
+    <path d="M12 16v-1a2 2 0 0 1 2-2h5M35 13a2 2 0 0 1 2-2h7M12 40v-1a2 2 0 0 1 2-2h8M39 38h6M61 41v9M36 62v-1a2 2 0 0 1 2-2h7" stroke="#fff" stroke-opacity=".5" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>
