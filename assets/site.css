@@ -106,7 +106,7 @@ figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);
 .results-subheading{display:flex;align-items:baseline;max-width:var(--copy-width);margin:52px auto 22px;padding-top:25px;border-top:1px solid #e9edf0}
 .results-subheading h3{font-size:36px;font-weight:600;letter-spacing:-.7px}
 
-/* Give the final video comparisons their own viewport-wide presentation. */
+/* Featured comparisons follow the introduction in a viewport-wide section. */
 .qualitative-showcase{
   position:relative;left:50%;transform:translateX(-50%);
   width:calc(100vw - var(--page-gutter) - var(--page-gutter));
@@ -310,4 +310,53 @@ figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);
   .scrub-controls>input,.scrub-controls>.preview-progress{grid-column:1/-1;grid-row:2;width:100%;margin:8px 0}
   .scrub-controls>.subtle-button{grid-column:1/-1;grid-row:3;justify-self:end}
   .figure-topline .input-prompt{font-size:16px}
+}
+
+/* Keep the requested action visible before visitors open the full prompt. */
+.qualitative-section{padding-top:36px}
+.qualitative-section>.results-subheading{margin-top:0}
+.video-comparison>.video-prompt{margin:0 0 20px;border-top:0;border-bottom:1px solid #e7ece9;padding-bottom:18px;text-align:left}
+.video-prompt summary{gap:22px;padding-top:0;align-items:center;letter-spacing:0;font-weight:400}
+.video-prompt summary::after{content:none}
+.prompt-excerpt{display:block;flex:1;min-width:0;font-size:20px;line-height:1.5;color:#424952}
+.prompt-label{display:block;margin-bottom:3px;font-size:16px;font-weight:600;color:#738078}
+.prompt-toggle{flex:none;font-size:18px;font-weight:600;color:#47816a}
+.prompt-toggle::after{content:' +';margin-left:6px}
+.video-prompt[open] .prompt-toggle::after{content:' −'}
+.video-prompt[open] summary::after{content:none}
+@media(max-width:800px){.prompt-excerpt{font-size:18px}.prompt-toggle{font-size:16px}}
+@media(max-width:520px){.video-prompt summary{display:block}.prompt-label{font-size:14px}.prompt-toggle{display:block;margin-top:8px}}
+
+/* Preserve the paper's mechanism diagram; replace its right-hand stills with rollouts. */
+.teaser-layout{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);align-items:center;gap:24px}
+.teaser-diagram{min-width:0}
+.teaser-diagram .native-figure{overflow:hidden}
+.teaser-diagram .native-figure iframe{width:calc(100% * 1043 / 844);max-width:none}
+.teaser-diagram .animation-controls{flex-wrap:wrap;gap:8px}
+.teaser-diagram .step-buttons{flex-basis:100%;order:3;flex-wrap:wrap;gap:0}
+.teaser-diagram .step-buttons button{font-size:16px;padding:6px 8px;min-height:34px}
+.teaser-diagram .replay-button{margin-left:auto}
+.teaser-videos{min-width:0}
+.teaser-videos h3{font-size:22px;line-height:1.25;text-align:center;margin:0 0 14px}
+.teaser-video-item+.teaser-video-item{margin-top:14px}
+.teaser-video-label{font-size:20px;line-height:1.3;margin-bottom:6px;color:#66717d}
+.teaser-video-item video{display:block;width:100%;aspect-ratio:688/384;border-radius:8px;background:#f5f6f7}
+.teaser-video-item.ours video{outline:2px solid #5a9073;outline-offset:-2px}
+.teaser-playback{display:flex;align-items:center;gap:10px;margin-top:14px}
+.teaser-playback .play-button{font-size:16px;min-height:38px;padding:6px 10px;white-space:nowrap}
+.teaser-playback input{min-width:0;flex:1;width:60px}
+.teaser-playback .playback-speed{font-size:16px}
+#teaser-status:empty{display:none}
+@media(max-width:800px){
+ .teaser-layout{grid-template-columns:1fr;gap:24px}
+ .teaser-videos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .teaser-videos h3,.teaser-playback,#teaser-status{grid-column:1/-1}
+ .teaser-videos h3{margin:0}
+ .teaser-video-item+.teaser-video-item{margin-top:0}
+ .teaser-playback{margin-top:0}
+ .teaser-diagram .step-buttons{order:0;flex-basis:auto}
+}
+@media(max-width:520px){
+ .teaser-videos h3{font-size:20px}.teaser-video-label{font-size:18px}
+ .teaser-diagram .step-buttons{order:3;flex-basis:100%}
 }

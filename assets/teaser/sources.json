@@ -1,0 +1,37 @@
+{
+  "scene": "Biscuit tin",
+  "sequence": "Full source rollouts, no frames omitted or reordered.",
+  "comparison": "Same val66 scene prompt at index 2 and validation seed 20260830. Base uses one sink and four recent chunks; MosaiChunk uses one sink, two recent chunks, and one chunk equivalent of far memory. This teaser is illustrative; matched-budget quantitative comparisons are reported separately.",
+  "videos": {
+    "base": {
+      "source": "models/lingbot-world-v2/ptr/h3port/runs/ptr_h3/eval_seg379_t6w2_chain0902_b2.0_base_s1w4/media/0000468/validation/backbone/prompt0002.mp4",
+      "sha256": "40349e3348ae688164103072a7ed59c01ae4ef35d70ba692296ad79654d61068",
+      "frames": 379,
+      "fps": 24,
+      "originalSize": [
+        1376,
+        768
+      ],
+      "webSize": [
+        688,
+        384
+      ],
+      "posterFrame": 52
+    },
+    "mc": {
+      "source": "models/lingbot-world-v2/ptr/h3port/runs/ptr_h3/eval_seg379_t6w2_chain0902_b1.0_ck416b1/media/0000416/validation/backbone/prompt0002.mp4",
+      "sha256": "be2034e15ecb3835dbeede08ed020c13285030512567369fbc1fb07ac6d19675",
+      "frames": 379,
+      "fps": 24,
+      "originalSize": [
+        1376,
+        768
+      ],
+      "webSize": [
+        688,
+        384
+      ],
+      "posterFrame": 52
+    }
+  }
+}

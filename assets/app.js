@@ -66,6 +66,7 @@
     const render=()=>{
       pressed(buttons,overview?null:buttons[stage]);
       play.innerHTML=running?'Ⅱ <span>Pause</span>':!overview&&finished()?'↻ <span>Replay</span>':'▶ <span>Play</span>';
+      if(name==='teaser')$('span',play).textContent+=' diagram';
       play.setAttribute('aria-label',`${running?'Pause':!overview&&finished()?'Replay':'Play'} ${name} animation`);
       const caption=$('[data-stage-caption]',card);if(caption){caption.textContent=overview?overviewCaption:captions[name][stage];caption.dataset.paperCopy=overview?`${name}-caption`:`${name}-stage-${stage}`;window.PAPER_MATH.render(caption);}
       card.dataset.view=overview?'overview':'stage';
@@ -312,13 +313,27 @@
   // Settle a moving track before its responsive dimensions change.
   window.addEventListener('resize',()=>carouselAnimations.forEach(animation=>animation.finish()));
   reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)carouselAnimations.forEach(animation=>animation.finish());});
+  // Show exact excerpts of the input, keeping the complete prompt one click away.
+  function promptExcerpt(scene){
+    const action=text=>text.replace(/^Static camera(?: unchanged)?\.\s*/, '').match(/[^.!?]+[.!?]/)?.[0]?.trim()||text;
+    const first=action(scene.prompts[0]);
+    return scene.dataset==='t2v'?`${first} … ${action(scene.prompts[scene.prompts.length-1])}`:first;
+  }
+  $('#video-slide .video-prompt').addEventListener('toggle',event=>{
+    $('.prompt-toggle',event.currentTarget).textContent=event.currentTarget.open?'Hide full prompt':'Full prompt';
+  });
   function renderPreview(button,scene){
     if(button.dataset.scene===scene.id)return;
     button.dataset.scene=scene.id;
     if(!button.classList.contains('carousel-extra'))button.setAttribute('aria-label',`${button.id.endsWith('prev')?'Previous':'Next'} video example: ${scene.title}`);
     // Static posters share the live card's layout; neighboring cards do not
     // create or load additional video players.
-    button.innerHTML='<div class="scrub-controls" aria-hidden="true"><span class="play-button">▶ <span>Play all</span></span><span class="playback-speed">3×</span><span class="preview-progress"></span><span class="small-note">0.0 s</span><span class="subtle-button">Revisit frames</span></div><div class="videos"></div><div class="video-prompt"><span class="preview-prompt-label">Show prompt</span></div>';
+    button.innerHTML='<div class="scrub-controls" aria-hidden="true"><span class="play-button">▶ <span>Play all</span></span><span class="playback-speed">3×</span><span class="preview-progress"></span><span class="small-note">0.0 s</span><span class="subtle-button">Revisit frames</span></div><div class="videos"></div>';
+    const preview=document.createElement('div');preview.className='video-prompt';
+    const excerpt=document.createElement('div');excerpt.className='prompt-excerpt';
+    const label=document.createElement('span');label.className='prompt-label';label.textContent='Prompt (excerpt)';
+    const text=document.createElement('span');text.textContent=promptExcerpt(scene);
+    excerpt.append(label,text);preview.append(excerpt);button.prepend(preview);
     $('.videos',button).replaceChildren(...buildVideoCards(scene,false));
   }
   function renderVideos(task=qualState.task,page=qualState.page[task]){
@@ -342,6 +357,7 @@
     [-1,1].forEach(offset=>{
       renderPreview($(`#video-peek-${offset<0?'prev':'next'}`),pageScene(offset,task,page));
     });
+    $('#video-prompt-summary').textContent=promptExcerpt(scene);
     $('#video-prompt-text').replaceChildren(...scene.prompts.map(text=>{const p=document.createElement('p');p.textContent=text;return p;}));
     $('#video-slide .video-prompt').open=false;
     videoItems=[...scene.budgets[String(videoBudget)]].sort((a,b)=>['mc','moc','base'].indexOf(a.method)-['mc','moc','base'].indexOf(b.method));
