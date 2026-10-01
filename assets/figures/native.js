@@ -43,10 +43,14 @@
   // coordinate system before assigning them to a semantic stage.
   function svgBox(el){
     const box=el.getBBox();
-    const matrix=source.getScreenCTM().inverse().multiply(el.getScreenCTM());
+    // Stay in SVG coordinates: screen transforms introduce zoom-dependent
+    // rounding that can move a component across a story's layout boundary.
+    const matrix=source.getCTM().inverse().multiply(el.getCTM());
     const points=[[box.x,box.y],[box.x+box.width,box.y+box.height]]
       .map(([x,y])=>new DOMPoint(x,y).matrixTransform(matrix));
-    return {x:points[0].x,y:points[0].y,w:points[1].x-points[0].x,h:points[1].y-points[0].y};
+    // Normalize subpixel roundoff before comparing with exact SVG boundaries.
+    const stable=value=>Math.round(value*1e6)/1e6;
+    return {x:stable(points[0].x),y:stable(points[0].y),w:stable(points[1].x-points[0].x),h:stable(points[1].y-points[0].y)};
   }
   // Flatten layout wrappers only; semantic components and their source
   // transforms stay intact (grids, math labels, DiT, encoder, and arrows).
@@ -75,13 +79,13 @@
   }
   function remaining(predicate){return select(item=>!owned.has(item.el)&&predicate(item));}
   function cloneCells(items,name){
-    const layer=make('g',{'data-motion':name,'aria-hidden':'true'});
+    const layer=make('g',{'data-motion':name,'aria-hidden':'true',visibility:'hidden'});
     elements(items).forEach(el=>{
       const copy=el.cloneNode(true);copy.removeAttribute('style');copy.removeAttribute('data-operation');copy.removeAttribute('data-stage');
       // Use root coordinates even when the original lives in a translated
       // panel. This preserves cell correspondence in the paper SVG.
       const wrapper=make('g');
-      const matrix=source.getScreenCTM().inverse().multiply(el.parentNode.getScreenCTM());
+      const matrix=source.getCTM().inverse().multiply(el.parentNode.getCTM());
       wrapper.setAttribute('transform',`matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e} ${matrix.f})`);
       wrapper.append(copy);layer.append(wrapper);
     });
