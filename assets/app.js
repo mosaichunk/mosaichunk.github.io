@@ -209,9 +209,6 @@
     // Integer budgets use the paper tables; fractional MosaiChunk points use
     // the completed evaluations on the same scene cohort.
     const fractional=DATA.fractionalResults[resultKey()];
-    $('#budget-coverage-note').textContent=resultKey()==='translation'
-      ? 'The 0.5- and 1.5-chunk measurements extend the paper’s evaluation to rotation with translation, using the same protocol.'
-      : 'The 0.5- and 1.5-chunk LPIPS measurements extend the paper’s budget sweep using the same evaluation protocol.';
     const readout=$('#metric-readout');
     const defaultReadout='Hover or focus a point for its method, memory budget, and score.';
     readout.textContent=defaultReadout;

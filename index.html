@@ -13,7 +13,7 @@
   <script src="assets/data.js?v=20261001-curves" defer></script>
   <script src="assets/vendor/katex/katex.min.js?v=0.18.10" defer></script>
   <script src="assets/math.js?v=20261001-score-domain" defer></script>
-  <script src="assets/app.js?v=20261001-stage-arrows" defer></script>
+  <script src="assets/app.js?v=20261001-remove-budget-note" defer></script>
   <link rel="stylesheet" href="assets/brand.css?v=20261001-openvdn">
   <script src="assets/brand.js?v=20261001" defer></script>
 </head>
@@ -168,7 +168,6 @@
           <figure class="metric-panel"><div class="metric-heading"><h4>LPIPS ↓</h4><span>Lower is better</span></div><svg data-chart-metric="lpips" viewBox="0 0 460 194" role="img" aria-label="LPIPS across far-memory budgets"></svg><div class="metric-axis-label">Far-memory budget <span class="math-inline" data-tex="\lVert\mathcal{F}_c\rVert" data-math-text="‖F_c‖">‖F_c‖</span> (chunks)</div></figure>
         </div>
         <p class="metric-readout" id="metric-readout" aria-live="polite">Hover or focus a point for its method, memory budget, and score.</p>
-        <p class="figure-note" id="budget-coverage-note">The 0.5- and 1.5-chunk LPIPS measurements extend the paper’s budget sweep using the same evaluation protocol.</p>
       </div>
       <p class="figure-intro" data-paper-copy="results-interpretation">Our experiments show that MosaiChunk consistently improves revisit consistency over both sliding-window inference and whole-chunk retrieval under matched memory budgets, across both T2V and I2V settings. The advantage also holds with less far memory: on T2V, MosaiChunk with one chunk exceeds MoC with two (0.899 vs. 0.841 CLIP); on I2V, half a chunk already does so (0.815 vs. 0.807). These comparisons demonstrate both effective retrieval at small budgets and improved revisit consistency when more memory is available.</p>
     </section>
