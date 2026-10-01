@@ -1,7 +1,7 @@
 {
   "scene": "Biscuit tin",
   "sequence": "Full source rollouts, no frames omitted or reordered.",
-  "comparison": "Same val66 scene prompt at index 2 and validation seed 20260830. Base uses one sink and four recent chunks; MosaiChunk uses one sink, two recent chunks, and one chunk equivalent of far memory. This teaser is illustrative; matched-budget quantitative comparisons are reported separately.",
+  "comparison": "Same val66 scene prompt at index 2 and validation seed 20260830, with matched active cache budgets. MosaiChunk uses one sink, two recent chunks, and two chunk equivalents of far memory (80 sections, 40 per chunk). Base uses one sink and four recent chunks to match the five-chunk total active cache.",
   "videos": {
     "base": {
       "source": "models/lingbot-world-v2/ptr/h3port/runs/ptr_h3/eval_seg379_t6w2_chain0902_b2.0_base_s1w4/media/0000468/validation/backbone/prompt0002.mp4",
@@ -16,11 +16,17 @@
         688,
         384
       ],
-      "posterFrame": 52
+      "posterFrame": 378,
+      "webSha256": "a598acb23e0abe62b62b65111ed9c077d3c40bdcde7427db03357c0f4c2ed985",
+      "sinkChunks": 1,
+      "recentChunks": 4,
+      "farMemoryChunks": 0,
+      "totalActiveChunks": 5,
+      "config": "models/lingbot-world-v2/ptr/h3port/runs/ptr_h3/eval_seg379_t6w2_chain0902_b2.0_base_s1w4/configs/resolved.yaml"
     },
     "mc": {
-      "source": "models/lingbot-world-v2/ptr/h3port/runs/ptr_h3/eval_seg379_t6w2_chain0902_b1.0_ck416b1/media/0000416/validation/backbone/prompt0002.mp4",
-      "sha256": "be2034e15ecb3835dbeede08ed020c13285030512567369fbc1fb07ac6d19675",
+      "source": "models/lingbot-world-v2/ptr/h3port/runs/ptr_h3/eval_seg379_t6w2_chain0902_b2.0_ck416b2/media/0000416/validation/backbone/prompt0002.mp4",
+      "sha256": "610d50cd9beb54a5b2d931a36f5c968db76d2ab9dc2dcd96d72611a7be17335e",
       "frames": 379,
       "fps": 24,
       "originalSize": [
@@ -31,7 +37,19 @@
         688,
         384
       ],
-      "posterFrame": 52
+      "posterFrame": 330,
+      "webSha256": "02ba8668134049a3a29eaeeea1e711fb912eaf8e717058e291f53aedc5e4c852",
+      "sinkChunks": 1,
+      "recentChunks": 2,
+      "farMemoryChunks": 2,
+      "totalActiveChunks": 5,
+      "config": "models/lingbot-world-v2/ptr/h3port/runs/ptr_h3/eval_seg379_t6w2_chain0902_b2.0_ck416b2/configs/resolved.yaml",
+      "budgetEvidence": "models/lingbot-world-v2/ptr/h3port/runs/ptr_h3/eval_seg379_t6w2_chain0902_b2.0_ck416b2/picks/picks0002.json",
+      "sectionsPerChunk": 40,
+      "maxSelectedSections": 80
     }
-  }
+  },
+  "budgetChunks": 2,
+  "promptIndex": 2,
+  "validationSeed": 20260830
 }
