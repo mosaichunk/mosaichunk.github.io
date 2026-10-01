@@ -9,7 +9,7 @@
   <link rel="icon" href="assets/icon.svg?v=2" type="image/svg+xml">
   <link rel="stylesheet" href="assets/fonts.css?v=20261001-openvdn">
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css?v=0.18.10">
-  <link rel="stylesheet" href="assets/site.css?v=20261001-shared-1080">
+  <link rel="stylesheet" href="assets/site.css?v=20261001-wide-qualitative">
   <script src="assets/data.js?v=20261001-curves" defer></script>
   <script src="assets/vendor/katex/katex.min.js?v=0.18.10" defer></script>
   <script src="assets/math.js?v=20261001-score-domain" defer></script>
@@ -156,20 +156,22 @@
 
       <div class="results-subheading"><h3>Qualitative results</h3></div>
       <p class="figure-intro" data-paper-copy="qualitative-description">Within each scene, methods share the prompt and noise seed; I2V methods also share the conditioning frame and input camera trajectory. Comparisons therefore differ only in the memory supplied to the backbone. Only MosaiChunk preserves the vegetables and their arrangement after the refrigerator reopens, and retains the cupboard's contents after its doors reopen. The accompanying Video Viewer provides synchronized full rollouts together with the departure–revisit frame pairs and their CLIP scores. Scores are computed on the original rollouts, before the compression used to package the accompanying Video Viewer.</p>
-      <div class="segmented split-selection" id="qual-tabs" role="group" aria-label="Qualitative results split"><button data-task="t2v" aria-pressed="true">Text-to-video <span>5 examples</span></button><button data-task="i2v" aria-pressed="false">Image-to-video <span>5 examples</span></button></div>
-      <div class="carousel-heading"><div><h4 id="video-title"></h4><span class="small-note" id="video-setting"></span></div><div class="pagination" role="group" aria-label="Video example pages"><button id="video-prev" aria-label="Previous video example">←</button><span id="video-page" aria-live="polite">01 / 05</span><button id="video-next" aria-label="Next video example">→</button></div></div>
-      <div class="video-carousel" aria-roledescription="carousel" aria-label="Five video comparisons">
-        <div class="carousel-track">
-        <button class="video-comparison carousel-peek previous" id="video-peek-prev" aria-label="Previous video example"></button>
-        <div class="video-comparison" id="video-slide" role="group" aria-roledescription="slide">
-          <div class="scrub-controls"><button class="play-button" id="video-play" aria-label="Play synchronized videos at 3 times speed">▶ <span>Play all</span></button><span class="playback-speed" aria-label="Playback speed: 3 times">3×</span><input id="video-progress" type="range" min="0" max="1000" value="0" aria-label="Synchronized video timeline"><span id="video-time" class="small-note">0.0 s</span><button id="video-revisit" class="subtle-button">Revisit frames</button></div>
-          <div class="videos" id="videos"></div>
-          <details class="video-prompt"><summary>Show prompt</summary><div id="video-prompt-text"></div></details>
+      <div class="qualitative-showcase" role="region" aria-label="Qualitative video comparisons">
+        <div class="segmented split-selection" id="qual-tabs" role="group" aria-label="Qualitative results split"><button data-task="t2v" aria-pressed="true">Text-to-video <span>5 examples</span></button><button data-task="i2v" aria-pressed="false">Image-to-video <span>5 examples</span></button></div>
+        <div class="carousel-heading"><div><h4 id="video-title"></h4><span class="small-note" id="video-setting"></span></div><div class="pagination" role="group" aria-label="Video example pages"><button id="video-prev" aria-label="Previous video example">←</button><span id="video-page" aria-live="polite">01 / 05</span><button id="video-next" aria-label="Next video example">→</button></div></div>
+        <div class="video-carousel" aria-roledescription="carousel" aria-label="Five video comparisons">
+          <div class="carousel-track">
+          <button class="video-comparison carousel-peek previous" id="video-peek-prev" aria-label="Previous video example"></button>
+          <div class="video-comparison" id="video-slide" role="group" aria-roledescription="slide">
+            <div class="scrub-controls"><button class="play-button" id="video-play" aria-label="Play synchronized videos at 3 times speed">▶ <span>Play all</span></button><span class="playback-speed" aria-label="Playback speed: 3 times">3×</span><input id="video-progress" type="range" min="0" max="1000" value="0" aria-label="Synchronized video timeline"><span id="video-time" class="small-note">0.0 s</span><button id="video-revisit" class="subtle-button">Revisit frames</button></div>
+            <div class="videos" id="videos"></div>
+            <details class="video-prompt"><summary>Show prompt</summary><div id="video-prompt-text"></div></details>
+          </div>
+          <button class="video-comparison carousel-peek next" id="video-peek-next" aria-label="Next video example"></button>
+          </div>
         </div>
-        <button class="video-comparison carousel-peek next" id="video-peek-next" aria-label="Next video example"></button>
-        </div>
+        <div class="pagination-dots" id="video-pages" role="group" aria-label="Choose video example"></div>
       </div>
-      <div class="pagination-dots" id="video-pages" role="group" aria-label="Choose video example"></div>
 
     </section>
   </main>
