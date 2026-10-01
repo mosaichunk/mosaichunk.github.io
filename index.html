@@ -8,11 +8,11 @@
   <title>MosaiChunk — Compositing Spatio-Temporal Memory</title>
   <link rel="icon" href="assets/icon.svg?v=2" type="image/svg+xml">
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css?v=0.18.10">
-  <link rel="stylesheet" href="assets/site.css?v=20261001-larger-equations">
+  <link rel="stylesheet" href="assets/site.css?v=20261001-score-domain">
   <script src="assets/data.js?v=20261001-curves" defer></script>
   <script src="assets/vendor/katex/katex.min.js?v=0.18.10" defer></script>
-  <script src="assets/math.js?v=20261001-body-equations" defer></script>
-  <script src="assets/app.js?v=20261001-body-equations" defer></script>
+  <script src="assets/math.js?v=20261001-score-domain" defer></script>
+  <script src="assets/app.js?v=20261001-score-domain" defer></script>
   <link rel="stylesheet" href="assets/brand.css?v=20261001">
   <script src="assets/brand.js?v=20261001" defer></script>
 </head>
@@ -84,7 +84,7 @@
       <p class="figure-intro" data-paper-copy="architecture-encode"><strong>Stage 1: Encode and store.</strong> We partition each chunk's unrotated KV into equal-size groups, called sections, using balanced k-means. We observe that the KV entries for each section exhibit strong temporal redundancy: sections from neighboring chunks are always similar. Therefore, we train a lightweight descriptor encoder that maps the pooled keys of each section s to a descriptor d(s). The descriptor space learns an anti-recency bias so that similarity over descriptors reflects semantic relatedness rather than temporal proximity. The section bank stores these sections of verbatim KV entries and their descriptors in CPU memory.</p>
       <p class="figure-intro" data-paper-copy="architecture-score"><strong>Stage 2: Score historical sections.</strong> For retrieval when generating chunk cₜ, the sections of the latest generated chunk cₜ₋₁ form the query set Q, and the historical sections outside the sliding window form the candidate set H. The score measures a candidate's highest descriptor similarity to any query section.</p>
       <div class="equation" data-equation="score" aria-label="Historical section scoring"></div>
-      <p class="figure-intro" data-paper-copy="architecture-compose"><strong>Stage 3: Extract and compose.</strong> The router ranks all candidate sections together and selects the global top-N. Since sections have equal size, the far-memory budget determines N. A softmax over all candidate scores gives a weight for each section. We normalize the selected weights to unit mean and use them to scale the selected sections' values. We then concatenate their KV into a MosaiChunk, which serves as far memory for chunk cₜ. The frozen DiT reads the MosaiChunk alongside the sliding window.</p>
+      <p class="figure-intro" data-paper-copy="architecture-compose"><strong>Stage 3: Extract and compose.</strong> The router ranks all candidate sections by their scores and selects the global top-N. Since sections have equal size, the far-memory budget determines N. A softmax over all candidate scores gives a weight for each section. We normalize the selected weights to unit mean and use them to scale the selected sections' values. We then concatenate their KV into a MosaiChunk, which serves as far memory for chunk cₜ. The frozen DiT reads the MosaiChunk alongside the sliding window.</p>
       <div class="equation" data-equation="compose" aria-label="Composed far-memory keys and values"></div>
       <figure class="figure-card" data-animation="architecture">
         <div class="native-figure" style="--figure-ratio:1348/550"><iframe src="assets/figures/architecture.html?v=20261001-figure-zoom" title="Three-stage memory router animation, using the paper's architecture source" loading="lazy" scrolling="no"></iframe></div>
@@ -94,8 +94,7 @@
 
       <div class="subsection-heading"><h3>Self-distillation</h3></div>
 <!-- Method: training the descriptor encoder. -->
-      <p class="figure-intro" data-paper-copy="training-setup">We use RAVEN-adapted MiniMax-H3 (H3-AR) for text-to-video (T2V) and LingBot-World-Infinity for image-to-video (I2V). We train the descriptor encoder through self-distillation to match the same frozen generator's predictions under richer far memory. Teacher and student use the same frozen DiT, noisy latent, denoising step, and sliding window; only far memory differs. The teacher receives whole historical chunks that fully cover the historical content to be redrawn. The student receives the router's MosaiChunk under a smaller memory budget.</p>
-      <p class="figure-intro" data-paper-copy="training-objective">We minimize the mean squared error (MSE) between teacher and student predictions. The teacher's whole chunks come from a much earlier visit to the same content, so matching its predictions encourages the student to recover useful details from older history. This encourages an anti-recency bias to emerge in the learned descriptor space: sections are favored for their relevant content rather than their recency alone.</p>
+      <p class="figure-intro" data-paper-copy="training-setup">We use RAVEN-adapted MiniMax-H3 (H3-AR) for text-to-video (T2V) and LingBot-World-Infinity for image-to-video (I2V). We train the descriptor encoder through self-distillation to match the same frozen generator's predictions under richer far memory. Teacher and student use the same frozen DiT, noisy latent, denoising step, and sliding window; only far memory differs. The teacher receives whole historical chunks that fully cover the historical content to be redrawn. The student receives the router's MosaiChunk under a smaller memory budget. We minimize the mean squared error (MSE) between teacher and student predictions.</p>
       <figure class="figure-card" data-animation="training">
         <div class="native-figure" style="--figure-ratio:1206/522"><iframe src="assets/figures/training.html?v=20261001-figure-zoom" title="Teacher, student, and descriptor encoder training animation" loading="lazy" scrolling="no"></iframe></div>
         <div class="animation-controls"><button class="play-button" data-play aria-label="Play training animation">▶ <span>Play</span></button><div class="step-buttons" aria-label="Self-distillation stages"><button data-step="0" aria-pressed="false">Teacher</button><button data-step="1" aria-pressed="false">Student</button><button data-step="2" aria-pressed="false">Match predictions</button><button data-step="3" aria-pressed="false">Update encoder</button></div><button class="replay-button" data-reset title="Show complete figure" aria-label="Show complete figure">↺</button></div>

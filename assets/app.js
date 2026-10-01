@@ -45,7 +45,7 @@
   "architecture": [
     "Each chunk is partitioned into sections and each section is encoded into a descriptor.",
     "The score measures a candidate's highest descriptor similarity to any query section.",
-    "The router ranks all candidate sections together and selects the global top-N. We then concatenate their KV into a MosaiChunk, which serves as far memory for chunk cₜ."
+    "The router ranks all candidate sections by their scores and selects the global top-N. We then concatenate their KV into a MosaiChunk, which serves as far memory for chunk cₜ."
   ],
   "training": [
     "The teacher receives whole historical chunks that fully cover the historical content to be redrawn. We identify these chunks from the input prompt schedule for T2V models or matching input camera poses for I2V models.",

@@ -18,7 +18,7 @@
   const options = {throwOnError: true, strict: 'error', trust: false, output: 'htmlAndMathml'};
   // sec/3_method.tex, Eq. score; sec/appendix/A_method.tex, Eq. supp_compose.
   const equations = {
-    score: String.raw`\operatorname{score}(h)=\max_{q\in\mathcal{Q}}\cos\bigl(d(q),d(h)\bigr)`,
+    score: String.raw`{\operatorname{score}(h)=\max_{q\in\mathcal{Q}}\cos\bigl(d(q),d(h)\bigr)},\allowbreak\quad{h\in\mathcal{H}}.`,
     compose: String.raw`\begin{aligned}K_{\mathrm{far}}&=\operatorname{Concat}(K_1,\ldots,K_N),\\V_{\mathrm{far}}&=\operatorname{Concat}(w_1V_1,\ldots,w_NV_N).\end{aligned}`
   };
 
