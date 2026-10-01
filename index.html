@@ -9,11 +9,11 @@
   <link rel="icon" href="assets/icon.svg?v=2" type="image/svg+xml">
   <link rel="stylesheet" href="assets/fonts.css?v=20261001-openvdn">
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css?v=0.18.10">
-  <link rel="stylesheet" href="assets/site.css?v=20261001-title-width">
+  <link rel="stylesheet" href="assets/site.css?v=20261001-reference-scale">
   <script src="assets/data.js?v=20261001-curves" defer></script>
   <script src="assets/vendor/katex/katex.min.js?v=0.18.10" defer></script>
   <script src="assets/math.js?v=20261001-score-domain" defer></script>
-  <script src="assets/app.js?v=20261001-score-domain" defer></script>
+  <script src="assets/app.js?v=20261001-reference-scale" defer></script>
   <link rel="stylesheet" href="assets/brand.css?v=20261001-openvdn">
   <script src="assets/brand.js?v=20261001" defer></script>
 </head>
@@ -162,7 +162,7 @@
         <div class="carousel-track">
         <button class="video-comparison carousel-peek previous" id="video-peek-prev" aria-label="Previous video example"></button>
         <div class="video-comparison" id="video-slide" role="group" aria-roledescription="slide">
-          <div class="scrub-controls"><button class="play-button" id="video-play" aria-label="Play synchronized videos">▶ <span>Play all</span></button><input id="video-progress" type="range" min="0" max="1000" value="0" aria-label="Synchronized video timeline"><span id="video-time" class="small-note">0.0 s</span><button id="video-revisit" class="subtle-button">Revisit frames</button></div>
+          <div class="scrub-controls"><button class="play-button" id="video-play" aria-label="Play synchronized videos at 3 times speed">▶ <span>Play all</span></button><span class="playback-speed" aria-label="Playback speed: 3 times">3×</span><input id="video-progress" type="range" min="0" max="1000" value="0" aria-label="Synchronized video timeline"><span id="video-time" class="small-note">0.0 s</span><button id="video-revisit" class="subtle-button">Revisit frames</button></div>
           <div class="videos" id="videos"></div>
           <details class="video-prompt"><summary>Show prompt</summary><div id="video-prompt-text"></div></details>
         </div>

@@ -243,6 +243,7 @@
   bindSelection('result-trajectory',value=>{state.trajectory=value;renderResults();});
 
   const videoBudget=2;
+  const qualitativePlaybackRate=3;
   const qualState={task:'t2v',page:{t2v:0,i2v:0}};
   $$('#qual-tabs button').forEach(button=>button.addEventListener('click',()=>{
     if(button.dataset.task===qualState.task)return;
@@ -317,7 +318,7 @@
     if(!button.classList.contains('carousel-extra'))button.setAttribute('aria-label',`${button.id.endsWith('prev')?'Previous':'Next'} video example: ${scene.title}`);
     // Static posters share the live card's layout; neighboring cards do not
     // create or load additional video players.
-    button.innerHTML='<div class="scrub-controls" aria-hidden="true"><span class="play-button">▶ <span>Play all</span></span><span class="preview-progress"></span><span class="small-note">0.0 s</span><span class="subtle-button">Revisit frames</span></div><div class="videos"></div><div class="video-prompt"><span class="preview-prompt-label">Show prompt</span></div>';
+    button.innerHTML='<div class="scrub-controls" aria-hidden="true"><span class="play-button">▶ <span>Play all</span></span><span class="playback-speed">3×</span><span class="preview-progress"></span><span class="small-note">0.0 s</span><span class="subtle-button">Revisit frames</span></div><div class="videos"></div><div class="video-prompt"><span class="preview-prompt-label">Show prompt</span></div>';
     $('.videos',button).replaceChildren(...buildVideoCards(scene,false));
   }
   function renderVideos(task=qualState.task,page=qualState.page[task]){
@@ -356,6 +357,7 @@
       const video=document.createElement(interactive?'video':'img');
       if(interactive){
         video.muted=true;video.playsInline=true;video.preload='none';video.poster='viewer/'+item.departureImage;video.src='viewer/'+item.video;
+        video.defaultPlaybackRate=qualitativePlaybackRate;video.playbackRate=qualitativePlaybackRate;
         video.setAttribute('aria-label',`${item.label}, ${scene.title}`);video.addEventListener('ended',()=>{if(playing)pauseVideos();});
       }else{video.className='preview-video';video.src='viewer/'+item.departureImage;video.alt='';}
       // Reuse the viewer's exact evaluation images and original frame times.
@@ -401,7 +403,7 @@
     try{
       await Promise.all(videos.map(ready));if(epoch!==videoEpoch)return;
       const time=videos[0].ended?0:videos[0].currentTime;
-      videos.forEach(v=>v.currentTime=Math.min(time,v.duration-.05));
+      videos.forEach(v=>{v.playbackRate=qualitativePlaybackRate;v.currentTime=Math.min(time,v.duration-.05);});
       await Promise.all(videos.map(v=>v.play()));if(epoch!==videoEpoch)return;
       playing=true;$('#video-play').innerHTML='Ⅱ <span>Pause</span>';
       syncTimer=setInterval(()=>{if(!playing)return;const master=videos[0];videos.slice(1).forEach(v=>{if(Math.abs(v.currentTime-master.currentTime)>.15)v.currentTime=Math.min(master.currentTime,v.duration-.05);});},400);
