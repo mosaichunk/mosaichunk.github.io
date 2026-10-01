@@ -17,6 +17,8 @@
   const displayMethod = name => name === 'Ours' || name === 'mc' ? 'MosaiChunk' : name;
   const methodClass = name => /Ours|MosaiChunk|^mc$/.test(name) ? 'ours' : /MoC|^moc$/.test(name) ? 'moc' : 'base';
   const methodColor = name => ({ours:'#478b6a',moc:'#bc8793',base:'#9fa9b6'})[methodClass(name)];
+  // SVG controls keep the same appearance on platforms that render ▶ as emoji.
+  const playbackButton = (mode,label) => `<svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-${mode}"/></svg> <span>${label}</span>`;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   function bindSelection(id, onChange){
@@ -75,7 +77,7 @@
       // Keep the active word visible when the narrow-screen strip can scroll.
       const target=overview?0:buttons[stage].offsetLeft-(stepGroup.clientWidth-buttons[stage].offsetWidth)/2;
       stepGroup.scrollTo({left:Math.max(0,target),behavior:reducedMotion.matches?'instant':'smooth'});
-      play.innerHTML=running?'Ⅱ <span>Pause</span>':!overview&&finished()?'▶ <span>Replay</span>':'▶ <span>Play</span>';
+      play.innerHTML=playbackButton(running?'pause':!overview&&finished()?'replay':'play',running?'Pause':!overview&&finished()?'Replay':'Play');
       if(name==='teaser')$('span',play).textContent+=' diagram';
       const playLabel=`${running?'Pause':!overview&&finished()?'Replay':'Play'} ${name} animation`;
       play.setAttribute('aria-label',playLabel);play.title=playLabel;
@@ -171,7 +173,7 @@
   }
   function renderCameraPlayback(){
     const label=cameraRunning?'Pause':cameraProgress>=1?'Replay':'Play';
-    cameraPlay.innerHTML=`${cameraRunning?'Ⅱ':cameraProgress>=1?'↻':'▶'} <span>${label}</span>`;
+    cameraPlay.innerHTML=playbackButton(cameraRunning?'pause':cameraProgress>=1?'replay':'play',label);
     cameraPlay.setAttribute('aria-label',`${label} camera trajectory`);
   }
   function pauseCamera(){
@@ -270,7 +272,7 @@
   let videos=[],videoItems=[],videoEpoch=0,playing=false,syncTimer=null;
   let carouselMoving=false,carouselDirection=1,carouselAnimations=[];
   let renderedTask=null,renderedPage=0;
-  function pauseVideos(){playing=false;clearInterval(syncTimer);syncTimer=null;videos.forEach(v=>v.pause());$('#video-play').innerHTML='▶ <span>Play all</span>';}
+  function pauseVideos(){playing=false;clearInterval(syncTimer);syncTimer=null;videos.forEach(v=>v.pause());$('#video-play').innerHTML=playbackButton('play','Play all');}
   // Five explicit examples per split, drawn from the original video viewer.
   // The quantitative controls are independent of this qualitative carousel.
   const featured={t2v:['t2v-11','t2v-01','t2v-04','t2v-14','t2v-17'],i2v:['i2v-01','i2v-02','i2v-03','i2v-11','i2v-20']};
@@ -343,7 +345,7 @@
     if(!button.classList.contains('carousel-extra'))button.setAttribute('aria-label',`${button.id.endsWith('prev')?'Previous':'Next'} video example: ${scene.title}`);
     // Static posters share the live card's layout; neighboring cards do not
     // create or load additional video players.
-    button.innerHTML='<div class="scrub-controls" aria-hidden="true"><span class="play-button">▶ <span>Play all</span></span><span class="playback-speed">3×</span><span class="preview-progress"></span><span class="small-note">0.0 s</span><span class="subtle-button">Revisit frames</span></div><div class="videos"></div>';
+    button.innerHTML='<div class="scrub-controls" aria-hidden="true"><span class="play-button">'+playbackButton('play','Play all')+'</span><span class="playback-speed">3×</span><span class="preview-progress"></span><span class="small-note">0.0 s</span><span class="subtle-button">Revisit frames</span></div><div class="videos"></div>';
     const preview=document.createElement('div');preview.className='video-prompt';
     const excerpt=document.createElement('div');excerpt.className='prompt-excerpt';
     const label=document.createElement('span');label.className='prompt-label';label.textContent='Prompt (excerpt)';
@@ -436,7 +438,7 @@
       const time=videos[0].ended?0:videos[0].currentTime;
       videos.forEach(v=>{v.playbackRate=qualitativePlaybackRate;v.currentTime=Math.min(time,v.duration-.05);});
       await Promise.all(videos.map(v=>v.play()));if(epoch!==videoEpoch)return;
-      playing=true;$('#video-play').innerHTML='Ⅱ <span>Pause</span>';
+      playing=true;$('#video-play').innerHTML=playbackButton('pause','Pause');
       syncTimer=setInterval(()=>{if(!playing)return;const master=videos[0];videos.slice(1).forEach(v=>{if(Math.abs(v.currentTime-master.currentTime)>.15)v.currentTime=Math.min(master.currentTime,v.duration-.05);});},400);
     }catch{if(epoch!==videoEpoch)return;pauseVideos();$('#video-time').textContent='Could not load video';}
   });

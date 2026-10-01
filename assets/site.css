@@ -327,6 +327,10 @@ figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);
 @media(max-width:800px){.prompt-excerpt{font-size:18px}.prompt-toggle{font-size:16px}}
 @media(max-width:520px){.video-prompt summary{display:block}.prompt-label{font-size:14px}.prompt-toggle{display:block;margin-top:8px}}
 
+/* Draw playback controls without relying on platform-specific symbol fonts. */
+.playback-icon{display:block;flex:none;width:18px;height:18px;fill:currentColor;stroke:none;pointer-events:none}
+.animation-controls .playback-icon{width:20px;height:20px}
+
 /* A single-word, connected stage strip shared by all four figure animations. */
 .animation-controls{
   display:grid;grid-template-columns:36px minmax(0,1fr) 36px;gap:12px;
