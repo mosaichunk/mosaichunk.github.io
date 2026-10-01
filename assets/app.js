@@ -59,15 +59,25 @@
   $$('[data-animation]').forEach(card=>{
     const name=card.dataset.animation;
     const buttons=$$('[data-step]',card),iframe=$('iframe',card),play=$('[data-play]',card);
+    const stepGroup=$('.step-buttons',card);
     const overviewCaption=$('[data-stage-caption]',card)?.textContent;
     let overview=true,stage=buttons.length-1,progress=1,running=false,raf=0,last=0;
     const finished=()=>stage===buttons.length-1&&progress>=1;
     const send=()=>iframe.contentWindow?.postMessage({type:'paper-figure-stage',stage,progress:reducedMotion.matches?1:progress},location.origin==='null'?'*':location.origin);
     const render=()=>{
       pressed(buttons,overview?null:buttons[stage]);
-      play.innerHTML=running?'Ⅱ <span>Pause</span>':!overview&&finished()?'↻ <span>Replay</span>':'▶ <span>Play</span>';
+      buttons.forEach((button,index)=>{
+        button.dataset.state=overview?'overview':index<stage?'complete':index===stage?'current':'pending';
+        if(!overview&&index===stage)button.setAttribute('aria-current','step');
+        else button.removeAttribute('aria-current');
+      });
+      // Keep the active word visible when the narrow-screen strip can scroll.
+      const target=overview?0:buttons[stage].offsetLeft-(stepGroup.clientWidth-buttons[stage].offsetWidth)/2;
+      stepGroup.scrollTo({left:Math.max(0,target),behavior:reducedMotion.matches?'instant':'smooth'});
+      play.innerHTML=running?'Ⅱ <span>Pause</span>':!overview&&finished()?'▶ <span>Replay</span>':'▶ <span>Play</span>';
       if(name==='teaser')$('span',play).textContent+=' diagram';
-      play.setAttribute('aria-label',`${running?'Pause':!overview&&finished()?'Replay':'Play'} ${name} animation`);
+      const playLabel=`${running?'Pause':!overview&&finished()?'Replay':'Play'} ${name} animation`;
+      play.setAttribute('aria-label',playLabel);play.title=playLabel;
       const caption=$('[data-stage-caption]',card);if(caption){caption.textContent=overview?overviewCaption:captions[name][stage];caption.dataset.paperCopy=overview?`${name}-caption`:`${name}-stage-${stage}`;window.PAPER_MATH.render(caption);}
       card.dataset.view=overview?'overview':'stage';
       card.dataset.stage=String(stage);send();
@@ -93,6 +103,13 @@
     buttons.forEach((button,index)=>button.addEventListener('click',()=>{
       overview=false;stage=index;progress=1;pause();
     }));
+    stepGroup.addEventListener('keydown',event=>{
+      const index=buttons.indexOf(event.target.closest('[data-step]'));
+      if(index<0||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+      event.preventDefault();
+      const next=event.key==='Home'?0:event.key==='End'?buttons.length-1:(index+(event.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;
+      buttons[next].focus({preventScroll:true});buttons[next].click();
+    });
     $('[data-reset]',card).addEventListener('click',()=>{overview=true;stage=buttons.length-1;progress=1;pause();});
     iframe.addEventListener('load',send);
     figureControllers.set(iframe.contentWindow,{send,pause,card});

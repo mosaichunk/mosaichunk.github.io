@@ -332,10 +332,6 @@ figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);
 .teaser-diagram{min-width:0}
 .teaser-diagram .native-figure{overflow:hidden}
 .teaser-diagram .native-figure iframe{width:calc(100% * 1043 / 844);max-width:none}
-.teaser-diagram .animation-controls{flex-wrap:wrap;gap:8px}
-.teaser-diagram .step-buttons{flex-basis:100%;order:3;flex-wrap:wrap;gap:0}
-.teaser-diagram .step-buttons button{font-size:16px;padding:6px 8px;min-height:34px}
-.teaser-diagram .replay-button{margin-left:auto}
 .teaser-videos{min-width:0}
 .teaser-videos h3{font-size:22px;line-height:1.25;text-align:center;margin:0 0 14px}
 .teaser-video-item+.teaser-video-item{margin-top:14px}
@@ -354,9 +350,62 @@ figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);
  .teaser-videos h3{margin:0}
  .teaser-video-item+.teaser-video-item{margin-top:0}
  .teaser-playback{margin-top:0}
- .teaser-diagram .step-buttons{order:0;flex-basis:auto}
 }
 @media(max-width:520px){
  .teaser-videos h3{font-size:20px}.teaser-video-label{font-size:18px}
- .teaser-diagram .step-buttons{order:3;flex-basis:100%}
 }
+
+/* A single-word, connected stage strip shared by all four figure animations. */
+.animation-controls{
+  display:grid;grid-template-columns:36px minmax(0,1fr) 36px;gap:12px;
+  border-top:0;border-bottom:1px solid #e7ece9;margin:0 0 18px;padding:0 0 16px;
+}
+.animation-controls .play-button,.animation-controls .replay-button{
+  display:grid;place-items:center;width:36px;height:40px;min-height:40px;
+  padding:0;margin:0;border:0;border-radius:6px;background:transparent;
+  color:#467d65;font-size:20px;line-height:1;
+}
+.animation-controls .play-button span{display:none}
+.animation-controls .play-button:hover,.animation-controls .replay-button:hover{background:#edf4f0;color:#235a43}
+.animation-controls .step-buttons{
+  position:relative;display:flex;flex-wrap:nowrap;align-items:stretch;justify-content:flex-start;
+  gap:0;order:0;min-width:0;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;
+}
+.animation-controls .step-buttons::-webkit-scrollbar{display:none}
+.animation-controls .step-buttons button{
+  --chevron:12px;--step-border:#bbc9c0;--step-surface:#fbfcfb;--step-ink:#626f67;
+  position:relative;isolation:isolate;flex:1 0 120px;min-width:0;min-height:42px;
+  margin:0 0 0 calc(-1 * var(--chevron));padding:8px 18px 8px 24px;
+  border:0;border-radius:0;background:transparent;color:var(--step-ink);
+  font-family:var(--font-body);font-size:16px;font-weight:750;line-height:1.2;
+  letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;transition:none;
+}
+.animation-controls .step-buttons button:first-child{margin-left:0;padding-left:12px}
+.animation-controls .step-buttons button::before,.animation-controls .step-buttons button::after{
+  content:'';position:absolute;z-index:-1;inset:0;
+  clip-path:polygon(0 0,calc(100% - var(--chevron)) 0,100% 50%,calc(100% - var(--chevron)) 100%,0 100%,var(--chevron) 50%);
+  background:var(--step-border);transition:background .2s ease;
+}
+.animation-controls .step-buttons button::after{inset:1px 2px;background:var(--step-surface)}
+.animation-controls .step-buttons button:first-child::before,.animation-controls .step-buttons button:first-child::after{
+  clip-path:polygon(0 0,calc(100% - var(--chevron)) 0,100% 50%,calc(100% - var(--chevron)) 100%,0 100%);
+}
+.animation-controls .step-buttons button[data-state=complete]{--step-surface:#47866c;--step-ink:#fff;--step-border:#39755b}
+.animation-controls .step-buttons button[data-state=current]{--step-surface:#205e4c;--step-ink:#fff;--step-border:#205e4c}
+.animation-controls .step-buttons button:hover{--step-border:#467d65}
+.animation-controls .step-buttons button[data-state=overview]:hover,.animation-controls .step-buttons button[data-state=pending]:hover{--step-surface:#edf4f0;--step-ink:#235a43}
+.animation-controls button:focus-visible{outline:2px solid #c19038;outline-offset:-3px}
+@media(max-width:800px){
+ .animation-controls{gap:8px}
+ .animation-controls .step-buttons button{flex-basis:96px;font-size:13px;letter-spacing:.04em}
+}
+@media(max-width:520px){
+ .animation-controls{grid-template-columns:1fr 36px;gap:4px;margin-bottom:14px;padding-bottom:8px}
+ .animation-controls .step-buttons{grid-column:1/-1;grid-row:1}
+ .animation-controls .play-button{grid-row:2;justify-self:start}
+ .animation-controls .replay-button{grid-row:2;justify-self:end}
+ .animation-controls .step-buttons button{flex-basis:92px;min-height:40px;padding-right:16px;padding-left:20px}
+}
+@media(prefers-reduced-motion:reduce){.animation-controls .step-buttons button::before,.animation-controls .step-buttons button::after{transition:none}}
+
+.animation-controls [title="DiT"] .step-label,.animation-controls [title="Frozen DiT"] .step-label{text-transform:none}
