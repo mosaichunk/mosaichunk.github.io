@@ -121,7 +121,7 @@
     $('.benchmark-detail').dataset.task=task;
     $('#prompt-interaction').hidden=!isT2V;$('#camera-interaction').hidden=isT2V;
     if(isT2V)pauseCamera();else playCamera(true,true);
-    $('#contact-caption').textContent=isT2V?"Model-generated frames from the T2V split when the prompt first reveals the object. Sixteen scenes are sampled at random from each split.":"Conditioning frames from the I2V split, taken from the first frames of DL3DV videos. Sixteen scenes are sampled at random from each split.";
+    $('#contact-caption').textContent=isT2V?"Model-generated T2V frames when the prompt first reveals the object; 16 randomly sampled scenes.":"First frames of DL3DV videos used to condition I2V; 16 randomly sampled scenes.";
     $('#contact-sheet').replaceChildren(...DATA.benchmark[task].map(item=>{
       const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Enlarge ${item.label.toLowerCase()}`);
       const im=document.createElement('img');im.src=item.image;im.alt=item.label;im.loading='lazy';b.append(im);
