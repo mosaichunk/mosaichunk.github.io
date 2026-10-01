@@ -50,8 +50,8 @@ footer{max-width:calc(var(--max) - 48px);margin:80px auto 0;padding:28px 0 35px;
 @media(max-width:680px){.authors{font-size:clamp(11px,3.1vw,15px);gap:2px 7px}.desktop-author-break{display:none}.mobile-author-break{display:block}}
 @media(max-width:350px){.authors{font-size:10.5px;column-gap:3px}}
 
-/* Keep prose at a readable measure while figures use the full page width. */
-:root{--copy-width:920px;--copy-size:20px;--copy-line-height:1.7}
+/* Prose and figures share the same full-width content column. */
+:root{--copy-width:100%;--copy-size:20px;--copy-line-height:1.7}
 .intro-copy,.section-lead,.figure-intro{
   width:100%;max-width:var(--copy-width);font-size:var(--copy-size);line-height:var(--copy-line-height);
   color:#424952;text-align:left;hyphens:none;
