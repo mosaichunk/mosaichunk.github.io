@@ -74,8 +74,8 @@ footer{max-width:var(--content-width);margin:80px auto 0;padding:28px 0 35px;bor
 .subsection-heading h3{font-size:28px;max-width:none}
 .subsection-heading{max-width:var(--copy-width);margin:44px auto 18px}
 .subsection-heading.diversity-heading{max-width:none;justify-content:center;text-align:center}
-figcaption{max-width:var(--copy-width);text-align:left;font-size:var(--copy-size);line-height:var(--copy-line-height);color:#66717d}
-.figure-note{max-width:var(--copy-width);margin:16px auto 0;font-size:var(--copy-size);line-height:var(--copy-line-height);color:#727c88}
+figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);line-height:var(--copy-line-height);color:#66717d}
+.figure-note{width:100%;max-width:none;margin:16px auto 0;font-size:var(--copy-size);line-height:var(--copy-line-height);color:#727c88}
 .benchmark-copy p{max-width:none;font-size:16px;line-height:1.75;color:#596574}
 .details-body p{max-width:none;font-size:17px;line-height:1.8;color:#535f6d}
 @media(max-width:800px){
