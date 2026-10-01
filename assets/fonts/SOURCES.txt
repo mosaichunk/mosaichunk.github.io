@@ -1,0 +1,11 @@
+Typography reference: https://openvdn.github.io/
+Fonts distributed by Google Fonts under the included SIL Open Font Licenses.
+Variable weights: 200-800. Newsreader also includes the optical-size axis.
+Latin and Latin Extended subsets.
+
+assistant-normal-latin-ext.woff2: https://fonts.gstatic.com/s/assistant/v24/2sDcZGJYnIjSi6H75xkzZmW5O7w.woff2
+assistant-normal-latin.woff2: https://fonts.gstatic.com/s/assistant/v24/2sDcZGJYnIjSi6H75xkzaGW5.woff2
+newsreader-italic-latin-ext.woff2: https://fonts.gstatic.com/s/newsreader/v26/cY9CfjOCX1hbuyalUrK439vCgIhCFpY.woff2
+newsreader-italic-latin.woff2: https://fonts.gstatic.com/s/newsreader/v26/cY9CfjOCX1hbuyalUrK439vCjohC.woff2
+newsreader-normal-latin-ext.woff2: https://fonts.gstatic.com/s/newsreader/v26/cY9AfjOCX1hbuyalUrK439DyjJBG.woff2
+newsreader-normal-latin.woff2: https://fonts.gstatic.com/s/newsreader/v26/cY9AfjOCX1hbuyalUrK4397yjA.woff2

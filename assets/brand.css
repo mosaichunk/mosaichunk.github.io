@@ -1,6 +1,6 @@
 /* Shared wordmark styling for project-page and supplementary-viewer copy. */
 .mosaichunk-name,.intro-copy .mosaichunk-name{
-  font-family:Inter,"Helvetica Neue",Arial,sans-serif;
+  font-family:var(--font-heading);
   font-style:normal;
   font-weight:750;
   color:#467d65;
