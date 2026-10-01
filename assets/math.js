@@ -16,6 +16,11 @@
   };
   const escapeRegex = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const options = {throwOnError: true, strict: 'error', trust: false, output: 'htmlAndMathml'};
+  // sec/3_method.tex, Eq. score; sec/appendix/A_method.tex, Eq. supp_compose.
+  const equations = {
+    score: String.raw`\operatorname{score}(h)=\max_{q\in\mathcal{Q}}\cos\bigl(d(q),d(h)\bigr)`,
+    compose: String.raw`\begin{aligned}K_{\mathrm{far}}&=\operatorname{Concat}(K_1,\ldots,K_N),\\V_{\mathrm{far}}&=\operatorname{Concat}(w_1V_1,\ldots,w_NV_N).\end{aligned}`
+  };
 
   function markVariables(block) {
     const pairs = tokens[block.dataset.paperCopy];
@@ -56,20 +61,11 @@
       katex.render(span.dataset.tex, span, options);
       span.dataset.rendered = 'true';
     }
-  }
-
-  function renderEquation(container, stage) {
-    container.classList.toggle('equation-pipeline', stage === 0);
-    if (stage === 0) {
-      container.textContent = 'Chunk KV → Sections → Encoder → Descriptors';
-      return;
+    for (const equation of root.querySelectorAll('[data-equation]:not([data-rendered])')) {
+      katex.render(equations[equation.dataset.equation], equation, {...options, displayMode: true});
+      equation.dataset.rendered = 'true';
     }
-    // sec/3_method.tex, Eq. score; sec/appendix/A_method.tex, Eq. supp_compose.
-    const tex = stage === 1
-      ? String.raw`\operatorname{score}(h)=\max_{q\in\mathcal{Q}}\cos\bigl(d(q),d(h)\bigr)`
-      : String.raw`\begin{aligned}K_{\mathrm{far}}&=\operatorname{Concat}(K_1,\ldots,K_N),\\V_{\mathrm{far}}&=\operatorname{Concat}(w_1V_1,\ldots,w_NV_N).\end{aligned}`;
-    katex.render(tex, container, {...options, displayMode: true});
   }
 
-  window.PAPER_MATH = {render, renderEquation};
+  window.PAPER_MATH = {render};
 })();

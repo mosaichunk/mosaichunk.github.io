@@ -68,8 +68,6 @@
       play.innerHTML=running?'Ⅱ <span>Pause</span>':!overview&&finished()?'↻ <span>Replay</span>':'▶ <span>Play</span>';
       play.setAttribute('aria-label',`${running?'Pause':!overview&&finished()?'Replay':'Play'} ${name} animation`);
       const caption=$('[data-stage-caption]',card);if(caption){caption.textContent=overview?overviewCaption:captions[name][stage];caption.dataset.paperCopy=overview?`${name}-caption`:`${name}-stage-${stage}`;window.PAPER_MATH.render(caption);}
-      const equation=$('[data-stage-equation]',card);
-      if(equation){equation.hidden=overview;if(overview)equation.replaceChildren();else window.PAPER_MATH.renderEquation(equation,stage);}
       card.dataset.view=overview?'overview':'stage';
       card.dataset.stage=String(stage);send();
     };

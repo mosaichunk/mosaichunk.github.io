@@ -8,11 +8,13 @@
   <title>MosaiChunk — Compositing Spatio-Temporal Memory</title>
   <link rel="icon" href="assets/icon.svg?v=2" type="image/svg+xml">
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css?v=0.18.10">
-  <link rel="stylesheet" href="assets/site.css?v=20261001-math">
+  <link rel="stylesheet" href="assets/site.css?v=20261001-body-equations">
   <script src="assets/data.js?v=20261001-curves" defer></script>
   <script src="assets/vendor/katex/katex.min.js?v=0.18.10" defer></script>
-  <script src="assets/math.js?v=20261001-chunk-ct" defer></script>
-  <script src="assets/app.js?v=20261001-model-intro" defer></script>
+  <script src="assets/math.js?v=20261001-body-equations" defer></script>
+  <script src="assets/app.js?v=20261001-body-equations" defer></script>
+  <link rel="stylesheet" href="assets/brand.css?v=20261001">
+  <script src="assets/brand.js?v=20261001" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#intro">Skip to content</a>
@@ -54,7 +56,7 @@
     <section id="intro" class="section intro-section">
       <!-- Abstract, introduction, and teaser caption. -->
       <p class="intro-copy" data-paper-copy="intro-context">Long-horizon autoregressive video generation is limited by a finite context window. When an object or scene falls out of context, its fine-grained visual details may be lost and difficult to recover upon reappearance. The simplest solution would be to keep the entire generated history active, but this quickly becomes impractical: as the rollout grows, so do both the KV cache and the cost of attending to it. The challenge is therefore not to remember everything, but to recover a small set of historical KV needed for the current continuation.</p>
-      <p class="intro-copy" data-paper-copy="intro-method">To retain access to such visual details, we introduce <strong class="method-name">MosaiChunk</strong>, a spatio-temporal memory mechanism that composes a mosaic of selected historical key–value (KV) entries across space and time. Our approach is motivated by the observation that a frozen video generator can directly consume such non-contiguous historical KV and recover the corresponding visual content. We therefore keep the generator fixed and learn only a lightweight router that determines which historical sections to include in the mosaic under a fixed active-memory budget.</p>
+      <p class="intro-copy" data-paper-copy="intro-method">To retain access to such visual details, we introduce <strong class="mosaichunk-name">MosaiChunk</strong>, a spatio-temporal memory mechanism that composes a mosaic of selected historical key–value (KV) entries across space and time. Our approach is motivated by the observation that a frozen video generator can directly consume such non-contiguous historical KV and recover the corresponding visual content. We therefore keep the generator fixed and learn only a lightweight router that determines which historical sections to include in the mosaic under a fixed active-memory budget.</p>
       <figure class="figure-card hero-figure" data-animation="teaser">
         <div class="figure-topline"><span class="input-prompt">“Close the tin, then reopen it.”</span></div>
         <div class="native-figure" style="--figure-ratio:1043/401"><iframe src="assets/figures/teaser.html?v=20261001-figure-zoom" title="MosaiChunk overview, animated from the paper's teaser" scrolling="no"></iframe></div>
@@ -81,12 +83,13 @@
       <p class="figure-intro" data-paper-copy="architecture-intro">Our goal is to automatically identify and compose the right historical KV entries under a fixed active-cache budget.</p>
       <p class="figure-intro" data-paper-copy="architecture-encode"><strong>Stage 1: Encode and store.</strong> We partition each chunk's unrotated KV into equal-size groups, called sections, using balanced k-means. We observe that the KV entries for each section exhibit strong temporal redundancy: sections from neighboring chunks are always similar. Therefore, we train a lightweight descriptor encoder that maps the pooled keys of each section s to a descriptor d(s). The descriptor space learns an anti-recency bias so that similarity over descriptors reflects semantic relatedness rather than temporal proximity. The section bank stores these sections of verbatim KV entries and their descriptors in CPU memory.</p>
       <p class="figure-intro" data-paper-copy="architecture-score"><strong>Stage 2: Score historical sections.</strong> For retrieval when generating chunk cₜ, the sections of the latest generated chunk cₜ₋₁ form the query set Q, and the historical sections outside the sliding window form the candidate set H. The score measures a candidate's highest descriptor similarity to any query section.</p>
+      <div class="equation" data-equation="score" aria-label="Historical section scoring"></div>
       <p class="figure-intro" data-paper-copy="architecture-compose"><strong>Stage 3: Extract and compose.</strong> The router ranks all candidate sections together and selects the global top-N. Since sections have equal size, the far-memory budget determines N. A softmax over all candidate scores gives a weight for each section. We normalize the selected weights to unit mean and use them to scale the selected sections' values. We then concatenate their KV into a MosaiChunk, which serves as far memory for chunk cₜ. The frozen DiT reads the MosaiChunk alongside the sliding window.</p>
+      <div class="equation" data-equation="compose" aria-label="Composed far-memory keys and values"></div>
       <figure class="figure-card" data-animation="architecture">
         <div class="native-figure" style="--figure-ratio:1348/550"><iframe src="assets/figures/architecture.html?v=20261001-figure-zoom" title="Three-stage memory router animation, using the paper's architecture source" loading="lazy" scrolling="no"></iframe></div>
         <div class="animation-controls"><button class="play-button" data-play aria-label="Play architecture animation">▶ <span>Play</span></button><div class="step-buttons" aria-label="Memory router stages"><button data-step="0" aria-pressed="false">Encode and store</button><button data-step="1" aria-pressed="false">Score</button><button data-step="2" aria-pressed="false">Extract and compose</button></div><button class="replay-button" data-reset title="Show complete figure" aria-label="Show complete figure">↺</button></div>
         <figcaption data-stage-caption data-paper-copy="architecture-caption">(a) Each chunk is partitioned into sections and each section is encoded into a descriptor. (b) Sections in the latest chunk query history outside the sliding window. (c) The N sections with the highest scores are extracted and composed into a MosaiChunk.</figcaption>
-        <div class="equation" data-stage-equation aria-label="Memory architecture equations" hidden></div>
       </figure>
 
       <div class="subsection-heading"><h3>Self-distillation</h3></div>
