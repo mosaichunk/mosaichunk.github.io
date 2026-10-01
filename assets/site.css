@@ -51,7 +51,7 @@ footer{max-width:calc(var(--max) - 48px);margin:80px auto 0;padding:28px 0 35px;
 @media(max-width:350px){.authors{font-size:10.5px;column-gap:3px}}
 
 /* Keep prose at a readable measure while figures use the full page width. */
-:root{--copy-width:760px;--copy-size:20px;--copy-line-height:1.7}
+:root{--copy-width:920px;--copy-size:20px;--copy-line-height:1.7}
 .intro-copy,.section-lead,.figure-intro{
   width:100%;max-width:var(--copy-width);font-size:var(--copy-size);line-height:var(--copy-line-height);
   color:#424952;text-align:left;hyphens:none;
@@ -72,6 +72,7 @@ footer{max-width:calc(var(--max) - 48px);margin:80px auto 0;padding:28px 0 35px;
 @media(max-width:520px){.equation{font-size:18px}.metric-axis-label{font-size:12px}}
 .subsection-heading h3{font-size:22px;max-width:none}
 .subsection-heading{max-width:var(--copy-width);margin:44px auto 18px}
+.subsection-heading.diversity-heading{max-width:none;justify-content:center;text-align:center}
 figcaption{max-width:var(--copy-width);text-align:left;font-size:var(--copy-size);line-height:var(--copy-line-height);color:#66717d}
 .figure-note{max-width:var(--copy-width);margin:16px auto 0;font-size:var(--copy-size);line-height:var(--copy-line-height);color:#727c88}
 .benchmark-copy p{max-width:none;font-size:16px;line-height:1.75;color:#596574}
