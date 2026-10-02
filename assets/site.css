@@ -392,3 +392,17 @@ figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);
 .bibtex{margin:0;padding:1.25em 1.5em;background:#f5f5f5;color:#4a4a4a;border:0;border-radius:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-size:14px;line-height:1.5;overflow-x:auto;white-space:pre;word-wrap:normal}
 .bibtex code{font-family:inherit;font-size:inherit;background:none;padding:0}
 @media (max-width:700px){.citation-title{font-size:26px}.bibtex{font-size:12px;padding:1em 1.1em}}
+
+/* Desktop default scale: at 100% browser zoom, render the page the way it looks at 75%.
+   CSS zoom also shrinks viewport units, so every vw/vh rule active at desktop widths is divided by
+   the same factor to keep its meaning (full-bleed showcase, viewport-high section, dialog sizes). */
+@media (min-width:901px){
+  html{zoom:.75}
+  :root{--page-gutter:clamp(20px,calc(2.25vw / .75),32px)}
+  h1{font-size:clamp(37px,calc(4.7vw / .75),66px);max-width:none;margin-left:-20px;margin-right:-20px}
+  dialog{max-width:min(1000px,calc(94vw / .75))}
+  dialog>img{max-height:calc(78vh / .75)}
+  .qualitative-showcase{width:calc(100vw / .75 - var(--page-gutter) - var(--page-gutter));min-height:calc(100vh / .75);min-height:calc(100svh / .75)}
+  .qualitative-showcase{--showcase-gutter:clamp(48px,calc(4vw / .75),96px)}
+  #pair-dialog{width:min(1080px,calc(94vw / .75));max-width:calc(94vw / .75)}
+}
