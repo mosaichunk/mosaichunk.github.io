@@ -385,3 +385,10 @@ figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);
 @media(prefers-reduced-motion:reduce){.animation-controls .step-buttons button::before,.animation-controls .step-buttons button::after{transition:none}}
 
 .animation-controls [title="DiT"] .step-label,.animation-controls [title="Frozen DiT"] .step-label{text-transform:none}
+
+/* Citation: Nerfies-style BibTeX block in the shared content column. */
+.citation-inner{width:100%;max-width:var(--copy-width);margin:0 auto}
+.citation-title{font-family:var(--font-body);font-weight:600;font-size:32px;line-height:1.125;letter-spacing:-0.3px;text-align:left;margin:0 0 24px;color:#363636}
+.bibtex{margin:0;padding:1.25em 1.5em;background:#f5f5f5;color:#4a4a4a;border:0;border-radius:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-size:14px;line-height:1.5;overflow-x:auto;white-space:pre;word-wrap:normal}
+.bibtex code{font-family:inherit;font-size:inherit;background:none;padding:0}
+@media (max-width:700px){.citation-title{font-size:26px}.bibtex{font-size:12px;padding:1em 1.1em}}
