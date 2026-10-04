@@ -9,16 +9,16 @@
   <link rel="icon" href="assets/icon.svg?v=2" type="image/svg+xml">
   <link rel="stylesheet" href="assets/fonts.css?v=20261001-openvdn">
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css?v=0.18.10">
-  <link rel="stylesheet" href="assets/site.css?v=20261004-video-captures">
-  <script src="assets/data.js?v=20261001-curves" defer></script>
+  <link rel="stylesheet" href="assets/site.css?v=20261004-scene-titles">
+  <script src="assets/data.js?v=20261004-scene-titles" defer></script>
   <script src="assets/vendor/katex/katex.min.js?v=0.18.10" defer></script>
   <script src="assets/math.js?v=20261001-teaser-history" defer></script>
-  <script src="assets/app.js?v=20261004-video-captures" defer></script>
+  <script src="assets/app.js?v=20261004-scene-titles" defer></script>
   <link rel="stylesheet" href="assets/brand.css?v=20261001-openvdn">
   <script src="assets/brand.js?v=20261001" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#intro">Skip to content</a>
+  <a class="skip-link" href="#qualitative">Skip to content</a>
   <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
     <symbol id="i-paper" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6M9 16h6"/></symbol>
     <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 20"/></symbol>
@@ -58,21 +58,8 @@
   </header>
 
   <main>
-    <section id="intro" class="section intro-section">
-      <!-- Teaser, abstract, and introduction. -->
-      <figure class="figure-card hero-figure" data-animation="teaser">
-        <div class="figure-topline"><span class="input-prompt">“Close the tin, then reopen it.”</span></div>
-        <div class="animation-controls"><button class="play-button" data-play aria-label="Play overview animation"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-play"/></svg> <span>Play</span></button><div class="step-buttons" role="group" aria-label="Overview stages"><button data-step="0" aria-pressed="false" title="History" aria-label="Stage 1: History"><span class="step-label">History</span></button><button data-step="1" aria-pressed="false" title="Query" aria-label="Stage 2: Query"><span class="step-label">Query</span></button><button data-step="2" aria-pressed="false" title="Select" aria-label="Stage 3: Select"><span class="step-label">Select</span></button><button data-step="3" aria-pressed="false" title="Visualize KV" aria-label="Stage 4: Visualize KV"><span class="step-label">Visualize</span></button><button data-step="4" aria-pressed="false" title="Compose" aria-label="Stage 5: Compose"><span class="step-label">Compose</span></button><button data-step="5" aria-pressed="false" title="DiT" aria-label="Stage 6: DiT"><span class="step-label">DiT</span></button><button data-step="6" aria-pressed="false" title="Output" aria-label="Stage 7: Output"><span class="step-label">Output</span></button></div><button class="replay-button" data-reset title="Show complete figure" aria-label="Show complete figure"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-replay"/></svg></button></div>
-        <div class="native-figure" style="--figure-ratio:1043/401"><iframe src="assets/figures/teaser.html?v=20261001-teaser-history" title="MosaiChunk memory router diagram" scrolling="no"></iframe></div>
-        <figcaption data-stage-caption data-paper-copy="teaser-caption">Our mechanism preserves fine-grained visual details over long-horizon rollouts, such as the star cookie's appearance when the tin closes and reopens.</figcaption>
-      </figure>
-      <p class="intro-copy" data-paper-copy="intro-context">Long-horizon autoregressive video generation is limited by a finite context window. When an object or scene falls out of context, its fine-grained visual details may be lost and difficult to recover upon reappearance. The simplest solution would be to keep the entire generated history active, but this quickly becomes impractical: as the rollout grows, so do both the KV cache and the cost of attending to it. The challenge is therefore not to remember everything, but to recover a small set of historical KV needed for the current continuation.</p>
-      <p class="intro-copy" data-paper-copy="intro-method">To retain access to such visual details, we introduce <strong class="mosaichunk-name">MosaiChunk</strong>, a spatio-temporal memory mechanism that composes a mosaic of selected historical key–value (KV) entries across space and time. Our approach is motivated by the observation that a frozen video generator can directly consume such non-contiguous historical KV and recover the corresponding visual content. We therefore keep the generator fixed and learn only a lightweight router that determines which historical sections to include in the mosaic under a fixed active-memory budget.</p>
-    </section>
-
-    <section id="qualitative" class="section qualitative-section">
-      <div class="results-subheading"><h3>Qualitative results</h3></div>
-      <p class="figure-intro" data-paper-copy="qualitative-description">Within each scene, methods share the prompt and noise seed; I2V methods also share the conditioning frame and input camera trajectory. Comparisons therefore differ only in the memory supplied to the backbone. Across T2V and I2V examples, MosaiChunk better preserves visual details when previously seen objects or scenes return to view. More results in <a href="viewer/video.html" target="_blank" rel="noopener">Video Viewer</a>.</p>
+    <section id="qualitative" class="section qualitative-section qualitative-first" aria-labelledby="qualitative-heading">
+      <h2 id="qualitative-heading" class="sr-only">Qualitative results</h2>
       <div class="qualitative-showcase" role="region" aria-label="Qualitative video comparisons">
         <div class="segmented split-selection" id="qual-tabs" role="group" aria-label="Qualitative results split"><button data-task="t2v" aria-pressed="true">Text-to-video <span>5 examples</span></button><button data-task="i2v" aria-pressed="false">Image-to-video <span>5 examples</span></button></div>
         <div class="carousel-heading"><div><h4 id="video-title"></h4><span class="small-note" id="video-setting"></span></div><div class="pagination" role="group" aria-label="Video example pages"><button id="video-prev" aria-label="Previous video example">←</button><span id="video-page" aria-live="polite">01 / 05</span><button id="video-next" aria-label="Next video example">→</button></div></div>
@@ -89,47 +76,70 @@
         </div>
         <div class="pagination-dots" id="video-pages" role="group" aria-label="Choose video example"></div>
       </div>
+      <p class="figure-intro" data-paper-copy="qualitative-description">MosaiChunk preserves visual details across revisits. More in <a href="viewer/video.html" target="_blank" rel="noopener">Video Viewer</a>.</p>
+    </section>
+
+    <section id="intro" class="section intro-section" aria-labelledby="intro-heading">
+      <div class="section-heading"><h2 id="intro-heading">01 / INTRO</h2></div>
+      <!-- Introduction and method overview follow the visual results. -->
+      <p class="intro-copy" data-paper-copy="intro-context">When objects leave a video model’s context window, it can forget their appearance by the time they return.</p>
+      <p class="intro-copy" data-paper-copy="intro-method"><strong class="mosaichunk-name">MosaiChunk</strong> composes a compact mosaic of historical key–value (KV) entries across space and time. A lightweight router selects what to remember under a fixed memory budget; the video generator stays frozen.</p>
+      <figure class="figure-card hero-figure" data-animation="teaser">
+        <div class="figure-topline"><span class="input-prompt">“Close the tin, then reopen it.”</span></div>
+        <div class="animation-controls"><button class="play-button" data-play aria-label="Play overview animation"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-play"/></svg> <span>Play</span></button><div class="step-buttons" role="group" aria-label="Overview stages"><button data-step="0" aria-pressed="false" title="History" aria-label="Stage 1: History"><span class="step-label">History</span></button><button data-step="1" aria-pressed="false" title="Query" aria-label="Stage 2: Query"><span class="step-label">Query</span></button><button data-step="2" aria-pressed="false" title="Select" aria-label="Stage 3: Select"><span class="step-label">Select</span></button><button data-step="3" aria-pressed="false" title="Visualize KV" aria-label="Stage 4: Visualize KV"><span class="step-label">Visualize</span></button><button data-step="4" aria-pressed="false" title="Compose" aria-label="Stage 5: Compose"><span class="step-label">Compose</span></button><button data-step="5" aria-pressed="false" title="DiT" aria-label="Stage 6: DiT"><span class="step-label">DiT</span></button><button data-step="6" aria-pressed="false" title="Output" aria-label="Stage 7: Output"><span class="step-label">Output</span></button></div><button class="replay-button" data-reset title="Show complete figure" aria-label="Show complete figure"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-replay"/></svg></button></div>
+        <div class="native-figure" style="--figure-ratio:1043/401"><iframe src="assets/figures/teaser.html?v=20261001-teaser-history" title="MosaiChunk memory router diagram" scrolling="no"></iframe></div>
+        <figcaption data-stage-caption data-paper-copy="teaser-caption">MosaiChunk preserves the star cookie’s appearance when the tin closes and reopens.</figcaption>
+      </figure>
     </section>
 
     <section id="method" class="section">
-      <div class="section-heading"><h2>01 / METHOD</h2></div>
+      <div class="section-heading"><h2>02 / METHOD</h2></div>
 
-      <div class="subsection-heading"><h3>Can a frozen backbone reuse a non-contiguous subset of historical KV?</h3></div>
+      <div class="subsection-heading"><h3>Can a frozen model reuse selected KV?</h3></div>
 <!-- Method: reusing non-contiguous historical KV. -->
-      <p class="figure-intro" data-paper-copy="motivation-context">Autoregressive video models generate one chunk at a time, attending to cached keys and values (KV) from earlier chunks. Under sliding-window inference, the backbone is conditioned on the most recent chunks, as well as a fixed attention sink used to stabilize generation; we omit this additional sink from the explanations below for simplicity. To condition generation on more distant memory, existing retrieval methods select past chunks as additional context. But are whole chunks necessary?</p>
-      <p class="figure-intro" data-paper-copy="motivation-intervention">We test whether a video generator can be conditioned on non-contiguous chunks, providing targeted KV sections as additional context. We select only the KV entries that represent the relevant content as far memory. We ask if these entries can steer the generation and bring that content back. We retain a copy of an earlier chunk's KV before eviction and manually mark the cookie region in one frame. We map this region to latent positions and select the corresponding cached keys and values. We supply them alongside the sliding window when the tin opens again.</p>
+      <p class="figure-intro" data-paper-copy="motivation-intervention">We manually select the cookie’s historical KV and supply it when the tin reopens. The frozen generator recovers its pink, star-shaped appearance—even after those entries have left the active context.</p>
       <figure class="figure-card" data-animation="motivation">        <div class="animation-controls"><button class="play-button" data-play aria-label="Play motivation animation"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-play"/></svg> <span>Play</span></button><div class="step-buttons" role="group" aria-label="Motivation stages"><button data-step="0" aria-pressed="false" title="Mark" aria-label="Stage 1: Mark"><span class="step-label">Mark</span></button><button data-step="1" aria-pressed="false" title="Select KV" aria-label="Stage 2: Select KV"><span class="step-label">Select</span></button><button data-step="2" aria-pressed="false" title="Frozen DiT" aria-label="Stage 3: Frozen DiT"><span class="step-label">DiT</span></button><button data-step="3" aria-pressed="false" title="Generated frame" aria-label="Stage 4: Generated frame"><span class="step-label">Output</span></button></div><button class="replay-button" data-reset title="Show complete figure" aria-label="Show complete figure"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-replay"/></svg></button></div>
         <div class="native-figure motivation-figure" style="--figure-ratio:1524/464"><iframe src="assets/figures/motivation.html?v=20261001-figure-zoom" title="Animated historical KV reuse intervention" loading="lazy" scrolling="no"></iframe></div>
-        <figcaption data-stage-caption data-paper-copy="motivation-caption">As illustrated in the figure, the generated frame preserves the cookie's pink, star-shaped appearance, demonstrating that a frozen autoregressive video generator can directly reuse a non-contiguous subset of its own previously cached KV, even after those entries have left the active context.</figcaption>
+        <figcaption data-stage-caption data-paper-copy="motivation-caption">Selected historical KV brings back the cookie’s appearance without retraining the generator.</figcaption>
       </figure>
 
       <div class="subsection-heading"><h3>Memory architecture</h3></div>
 <!-- Method: encode and store, score, extract and compose. -->
-      <p class="figure-intro" data-paper-copy="architecture-intro">Our goal is to automatically identify and compose the right historical KV entries under a fixed active-cache budget.</p>
-      <p class="figure-intro" data-paper-copy="architecture-encode"><strong>Stage 1: Encode and store.</strong> We partition each chunk's unrotated KV into equal-size groups, called sections, using balanced k-means. We observe that the KV entries for each section exhibit strong temporal redundancy: sections from neighboring chunks are always similar. Therefore, we train a lightweight descriptor encoder that maps the pooled keys of each section s to a descriptor d(s). The descriptor space learns an anti-recency bias so that similarity over descriptors reflects semantic relatedness rather than temporal proximity. The section bank stores these sections of verbatim KV entries and their descriptors in CPU memory.</p>
+      <ol class="method-steps">
+        <li><p class="figure-intro" data-paper-copy="architecture-overview-encode"><strong>1. Encode and store.</strong> Partition each chunk’s KV into equal-size sections. Encode a descriptor for each section and store both in CPU memory.</p></li>
+        <li><p class="figure-intro" data-paper-copy="architecture-overview-score"><strong>2. Retrieve.</strong> Use the latest chunk to query older memory. Score each historical section by its best descriptor match.</p></li>
+        <li><p class="figure-intro" data-paper-copy="architecture-overview-compose"><strong>3. Compose.</strong> Select the highest-scoring sections within the budget. Feed their KV to the frozen generator alongside its sliding window.</p></li>
+      </ol>
+      <figure class="figure-card" data-animation="architecture">        <div class="animation-controls"><button class="play-button" data-play aria-label="Play architecture animation"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-play"/></svg> <span>Play</span></button><div class="step-buttons" role="group" aria-label="Memory router stages"><button data-step="0" aria-pressed="false" title="Encode and store" aria-label="Stage 1: Encode and store"><span class="step-label">Encode</span></button><button data-step="1" aria-pressed="false" title="Score" aria-label="Stage 2: Score"><span class="step-label">Score</span></button><button data-step="2" aria-pressed="false" title="Extract and compose" aria-label="Stage 3: Extract and compose"><span class="step-label">Compose</span></button></div><button class="replay-button" data-reset title="Show complete figure" aria-label="Show complete figure"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-replay"/></svg></button></div>
+        <div class="native-figure" style="--figure-ratio:1348/550"><iframe src="assets/figures/architecture.html?v=20261001-figure-zoom" title="Three-stage memory router animation, using the paper's architecture source" loading="lazy" scrolling="no"></iframe></div>
+        <figcaption data-stage-caption data-paper-copy="architecture-caption">Encode sections, retrieve relevant history, and compose a compact memory for the next chunk.</figcaption>
+      </figure>
+      <details class="copy-details"><summary>Router details and equations</summary><div class="copy-details-body">
+<p class="figure-intro" data-paper-copy="architecture-encode"><strong>Stage 1: Encode and store.</strong> We partition each chunk's unrotated KV into equal-size groups, called sections, using balanced k-means. We observe that the KV entries for each section exhibit strong temporal redundancy: sections from neighboring chunks are always similar. Therefore, we train a lightweight descriptor encoder that maps the pooled keys of each section s to a descriptor d(s). The descriptor space learns an anti-recency bias so that similarity over descriptors reflects semantic relatedness rather than temporal proximity. The section bank stores these sections of verbatim KV entries and their descriptors in CPU memory.</p>
       <p class="figure-intro" data-paper-copy="architecture-score"><strong>Stage 2: Score historical sections.</strong> For retrieval when generating chunk cₜ, the sections of the latest generated chunk cₜ₋₁ form the query set Q, and the historical sections outside the sliding window form the candidate set H. The score measures a candidate's highest descriptor similarity to any query section.</p>
       <div class="equation" data-equation="score" aria-label="Historical section scoring"></div>
       <p class="figure-intro" data-paper-copy="architecture-compose"><strong>Stage 3: Extract and compose.</strong> The router ranks all candidate sections by their scores and selects the global top-N. Since sections have equal size, the far-memory budget determines N. A softmax over all candidate scores gives a weight for each section. We normalize the selected weights to unit mean and use them to scale the selected sections' values. We then concatenate their KV into a MosaiChunk, which serves as far memory for chunk cₜ. The frozen DiT reads the MosaiChunk alongside the sliding window.</p>
       <div class="equation" data-equation="compose" aria-label="Composed far-memory keys and values"></div>
-      <figure class="figure-card" data-animation="architecture">        <div class="animation-controls"><button class="play-button" data-play aria-label="Play architecture animation"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-play"/></svg> <span>Play</span></button><div class="step-buttons" role="group" aria-label="Memory router stages"><button data-step="0" aria-pressed="false" title="Encode and store" aria-label="Stage 1: Encode and store"><span class="step-label">Encode</span></button><button data-step="1" aria-pressed="false" title="Score" aria-label="Stage 2: Score"><span class="step-label">Score</span></button><button data-step="2" aria-pressed="false" title="Extract and compose" aria-label="Stage 3: Extract and compose"><span class="step-label">Compose</span></button></div><button class="replay-button" data-reset title="Show complete figure" aria-label="Show complete figure"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-replay"/></svg></button></div>
-        <div class="native-figure" style="--figure-ratio:1348/550"><iframe src="assets/figures/architecture.html?v=20261001-figure-zoom" title="Three-stage memory router animation, using the paper's architecture source" loading="lazy" scrolling="no"></iframe></div>
-        <figcaption data-stage-caption data-paper-copy="architecture-caption">(a) Each chunk is partitioned into sections and each section is encoded into a descriptor. (b) Sections in the latest chunk query history outside the sliding window. (c) The N sections with the highest scores are extracted and composed into a MosaiChunk.</figcaption>
-      </figure>
+      </div></details>
 
       <div class="subsection-heading"><h3>Self-distillation</h3></div>
 <!-- Method: training the descriptor encoder. -->
-      <p class="figure-intro" data-paper-copy="training-setup">We use RAVEN-adapted MiniMax-H3 (H3-AR) for text-to-video (T2V) and LingBot-World-Infinity for image-to-video (I2V). We train the descriptor encoder through self-distillation to match the same frozen generator's predictions under richer far memory. Teacher and student use the same frozen DiT, noisy latent, denoising step, and sliding window; only far memory differs. The teacher receives whole historical chunks that fully cover the historical content to be redrawn. The student receives the router's MosaiChunk under a smaller memory budget. We minimize the mean squared error (MSE) between teacher and student predictions.</p>
+      <p class="figure-intro" data-paper-copy="training-setup">Only the descriptor encoder is trained. A student using compact, routed memory learns to match the same frozen generator supplied with richer memory.</p>
       <figure class="figure-card" data-animation="training">        <div class="animation-controls"><button class="play-button" data-play aria-label="Play training animation"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-play"/></svg> <span>Play</span></button><div class="step-buttons" role="group" aria-label="Self-distillation stages"><button data-step="0" aria-pressed="false" title="Teacher" aria-label="Stage 1: Teacher"><span class="step-label">Teacher</span></button><button data-step="1" aria-pressed="false" title="Student" aria-label="Stage 2: Student"><span class="step-label">Student</span></button><button data-step="2" aria-pressed="false" title="Match predictions" aria-label="Stage 3: Match predictions"><span class="step-label">Match</span></button><button data-step="3" aria-pressed="false" title="Update encoder" aria-label="Stage 4: Update encoder"><span class="step-label">Update</span></button></div><button class="replay-button" data-reset title="Show complete figure" aria-label="Show complete figure"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-replay"/></svg></button></div>
         <div class="native-figure" style="--figure-ratio:1206/522"><iframe src="assets/figures/training.html?v=20261001-figure-zoom" title="Teacher, student, and descriptor encoder training animation" loading="lazy" scrolling="no"></iframe></div>
-        <figcaption data-stage-caption data-paper-copy="training-caption">Teacher predictions are fixed targets. Gradients pass through the student's frozen DiT and the section value weights to the descriptor encoder; they do not pass through the discrete section selection. The stored KV and backbone parameters remain unchanged. Since the backbone itself supplies the target, training requires no rendered ground-truth target videos.</figcaption>
+        <figcaption data-stage-caption data-paper-copy="training-caption">The backbone and stored KV stay fixed; gradients update the descriptor encoder.</figcaption>
       </figure>
+      <details class="copy-details"><summary>Training details</summary><div class="copy-details-body">
+<p class="figure-intro" data-paper-copy="training-setup-details">We use RAVEN-adapted MiniMax-H3 (H3-AR) for text-to-video (T2V) and LingBot-World-Infinity for image-to-video (I2V). We train the descriptor encoder through self-distillation to match the same frozen generator's predictions under richer far memory. Teacher and student use the same frozen DiT, noisy latent, denoising step, and sliding window; only far memory differs. The teacher receives whole historical chunks that fully cover the historical content to be redrawn. The student receives the router's MosaiChunk under a smaller memory budget. We minimize the mean squared error (MSE) between teacher and student predictions.</p>
+<p class="figure-intro" data-paper-copy="training-gradient-details">Teacher predictions are fixed targets. Gradients pass through the student's frozen DiT and the section value weights to the descriptor encoder; they do not pass through the discrete section selection. The stored KV and backbone parameters remain unchanged. Since the backbone itself supplies the target, training requires no rendered ground-truth target videos.</p>
+      </div></details>
     </section>
 
     <section id="benchmark" class="section benchmark-section">
-      <div class="section-heading"><h2>02 / BENCHMARK</h2></div>
-      <p class="section-lead" data-paper-copy="benchmark-intro">Existing benchmarks such as WBench, WorldMark, and PersistBench evaluate video quality and consistency, but do not systematically test long-horizon revisits in which frames establishing the target content's appearance are evicted from the model's sliding window. We therefore introduce <strong>RememBench</strong>, a benchmark with two splits for evaluating consistency across such revisits in autoregressive video models. Revisits are driven by prompts in the T2V split and by camera motion in the I2V split.</p>
+      <div class="section-heading"><h2>03 / BENCHMARK</h2></div>
+      <p class="section-lead" data-paper-copy="benchmark-intro"><strong>RememBench</strong> tests whether a model remembers visual details after they leave its active context. Prompts drive revisits in T2V; camera motion drives them in I2V.</p>
       <div class="segmented" id="benchmark-tabs" aria-label="Benchmark split"><button data-task="t2v" aria-pressed="true">Text-to-video <span>100 samples</span></button><button data-task="i2v" aria-pressed="false">Image-to-video <span>150 scenes</span></button></div>
-      <p class="figure-intro" id="benchmark-split-intro" data-paper-copy="benchmark-t2v">The split contains 100 samples with scenarios disjoint from router training. Each model input extends Ring Forcing's three-stage appear–disappear–reappear design to four prompt segments, with a separate segment keeping the object out of sight. The nominal prompt transitions occur at 3.6, 6.2, and 11.2 seconds. The third segment therefore requests five seconds with the object out of sight, exceeding the largest sliding-window baseline's approximately three seconds of recent context.</p>
+      <p class="figure-intro" id="benchmark-split-intro" data-paper-copy="benchmark-t2v">Objects appear, disappear, stay out of sight for five seconds, then return.</p>
       <div class="benchmark-detail" data-task="t2v">
         <h3 class="benchmark-title">Model input: <span id="benchmark-input">Prompt</span></h3>
         <div class="benchmark-interaction" id="prompt-interaction">
@@ -147,17 +157,18 @@
           <p class="figure-note">Input camera trajectory · schematic</p>
         </div>
       </div>
+      <details class="copy-details"><summary>Benchmark protocol</summary><div class="copy-details-body">
+<p class="figure-intro" id="benchmark-split-details" data-paper-copy="benchmark-t2v-details">The split contains 100 samples with scenarios disjoint from router training. Each model input extends Ring Forcing's three-stage appear–disappear–reappear design to four prompt segments, with a separate segment keeping the object out of sight. The nominal prompt transitions occur at 3.6, 6.2, and 11.2 seconds. The third segment therefore requests five seconds with the object out of sight, exceeding the largest sliding-window baseline's approximately three seconds of recent context.</p>
+      </div></details>
       <div class="subsection-heading diversity-heading"><h3>Visual diversity</h3></div>
       <div class="contact-sheet" id="contact-sheet" aria-label="Benchmark example frames"></div>
       <p class="figure-note" id="contact-caption" data-paper-copy="contact-t2v">Model-generated T2V frames when the prompt first reveals the object; 16 randomly sampled scenes.</p>
     </section>
 
     <section id="results" class="section results-section">
-      <div class="section-heading"><h2>03 / RESULTS</h2></div>
-      <p class="section-lead" data-paper-copy="results-intro">We evaluate whether MosaiChunk provides useful fine-grained historical information beyond a sliding window and compare it with existing retrieval mechanisms that condition on whole chunks, testing whether section-level memory better preserves visual details. We conduct both comparisons on the T2V and I2V splits of <strong>RememBench</strong>. We compare MosaiChunk with the sliding-window baseline (Base) and Mixture of Contexts (MoC), a whole-chunk retrieval mechanism. We adapt MoC on each frozen backbone.</p>
-      <div class="results-subheading"><h3>Quantitative results</h3></div>
-      <p class="figure-intro" data-paper-copy="results-budget">Let F_c denote the far memory used to generate chunk c, and ‖F_c‖ its budget in video-chunk equivalents. For example, ‖F_c‖ = 1 means that the size of the far memory is equivalent to one video chunk. Retrieval methods keep their sliding window fixed, whereas Base matches the total active KV cache budget by retaining additional recent chunks.</p>
-      <p class="figure-intro" data-paper-copy="results-metrics">CLIP similarity and LPIPS assess consistency between departure and revisit frames. T2V pairs are manually marked; I2V pairs use the conditioning frame and a revisit selected from Pi3X-reconstructed camera poses. We report medians over scenes.</p>
+      <div class="section-heading"><h2>04 / RESULTS</h2></div>
+      <p class="section-lead" data-paper-copy="results-intro">MosaiChunk improves revisit consistency over a sliding window (Base) and whole-chunk retrieval (MoC) under matched memory budgets.</p>
+      <p class="figure-intro" data-paper-copy="results-overview">Memory is measured in chunk equivalents. CLIP ↑ and LPIPS ↓ compare departure and revisit frames; scores are medians over scenes.</p>
       <div class="segmented split-selection" id="result-tabs" role="group" aria-label="Quantitative results split"><button data-task="t2v" aria-pressed="true">Text-to-video <span>100 samples</span></button><button data-task="i2v" aria-pressed="false">Image-to-video <span>150 scenes</span></button></div>
       <div class="result-toolbar">
         <div class="control-group" id="trajectory-control" hidden><span class="control-label">Trajectory</span><div class="segmented compact" id="result-trajectory" role="group" aria-label="Evaluation trajectory"><button data-value="rotation" aria-pressed="true">180° rotation</button><button data-value="translation" aria-pressed="false">Rotation + translation</button></div></div>
@@ -171,7 +182,11 @@
         </div>
         <p class="metric-readout" id="metric-readout" aria-live="polite">Hover or focus a point for its method, memory budget, and score.</p>
       </div>
-      <p class="figure-intro" data-paper-copy="results-interpretation">Our experiments show that MosaiChunk consistently improves revisit consistency over both sliding-window inference and whole-chunk retrieval under matched memory budgets, across both T2V and I2V settings. The advantage also holds with less far memory: on T2V, MosaiChunk with one chunk exceeds MoC with two (0.899 vs. 0.841 CLIP); on I2V, half a chunk already does so (0.815 vs. 0.807). These comparisons demonstrate both effective retrieval at small budgets and improved revisit consistency when more memory is available.</p>
+      <p class="figure-intro" data-paper-copy="results-interpretation"><strong>Better consistency with less memory.</strong> Using one chunk on T2V, MosaiChunk exceeds MoC at two (<strong>0.899 vs. 0.841 CLIP</strong>). On I2V rotation, half a chunk suffices (<strong>0.815 vs. 0.807</strong>).</p>
+      <details class="copy-details"><summary>Evaluation details</summary><div class="copy-details-body">
+<p class="figure-intro" data-paper-copy="results-budget">Let F_c denote the far memory used to generate chunk c, and ‖F_c‖ its budget in video-chunk equivalents. For example, ‖F_c‖ = 1 means that the size of the far memory is equivalent to one video chunk. Retrieval methods keep their sliding window fixed, whereas Base matches the total active KV cache budget by retaining additional recent chunks.</p>
+<p class="figure-intro" data-paper-copy="results-metrics">CLIP similarity and LPIPS assess consistency between departure and revisit frames. T2V pairs are manually marked; I2V pairs use the conditioning frame and a revisit selected from Pi3X-reconstructed camera poses. We report medians over scenes.</p>
+      </div></details>
     </section>
     <section id="citation" class="section citation-section">
       <div class="citation-inner">

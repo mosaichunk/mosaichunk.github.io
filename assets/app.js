@@ -1,4 +1,4 @@
-/* Scientific copy comes from the manuscript;
+/* Scientific copy is condensed from the manuscript;
  * charts also include the labelled completed fractional-budget evaluations.
  */
 (() => {
@@ -31,30 +31,30 @@
   // selection shows that stage's result without starting an animation.
   const captions = {
   "teaser": [
-    "Autoregressive video models generate one chunk at a time, attending to cached keys and values (KV) from earlier chunks.",
-    "Sections in the latest chunk query history outside the sliding window.",
-    "High-scoring sections therefore retrieve historical content relevant to the latest chunk.",
-    "We introduce MosaiChunk, a spatio-temporal memory mechanism that conditions a video generation model on composed historical KV sections (pink for the cookie, yellow for the tin, and gray for the background).",
-    "We then concatenate their KV into a MosaiChunk, which serves as far memory for chunk cₜ.",
-    "The frozen DiT reads the MosaiChunk alongside the sliding window.",
-    "The frozen video generator preserves the cookie's appearance when the tin opens again."
+    "Generate a video chunk using cached keys and values (KV) from earlier chunks.",
+    "Query older memory using sections from the latest chunk.",
+    "Retrieve historical sections with the strongest descriptor matches.",
+    "Selected KV sections carry visual details from different times and regions.",
+    "Concatenate selected sections into a MosaiChunk for the next chunk.",
+    "The frozen generator reads this memory alongside the sliding window.",
+    "Recover the cookie’s appearance when the tin opens again."
   ],
   "motivation": [
-    "We retain a copy of an earlier chunk's KV before eviction and manually mark the cookie region in one frame.",
-    "We map this region to latent positions and select the corresponding cached keys and values.",
-    "We map this region to latent positions and select the corresponding cached keys and values. We supply them alongside the sliding window when the tin opens again.",
-    "The frozen video generator preserves the cookie's appearance when the tin opens again."
+    "Mark the cookie region in a frame from earlier history.",
+    "Select the corresponding cached keys and values.",
+    "Supply the selected KV alongside the sliding window when the tin reopens.",
+    "The frozen generator recovers the cookie’s pink, star-shaped appearance."
   ],
   "architecture": [
-    "Each chunk is partitioned into sections and each section is encoded into a descriptor.",
-    "The score measures a candidate's highest descriptor similarity to any query section.",
-    "The router ranks all candidate sections by their scores and selects the global top-N. We then concatenate their KV into a MosaiChunk, which serves as far memory for chunk cₜ."
+    "Partition each chunk’s KV into sections and encode a descriptor for each.",
+    "Score each historical section by its best descriptor match with the query.",
+    "Select the top-N sections and compose their KV into far memory."
   ],
   "training": [
-    "The teacher receives whole historical chunks that fully cover the historical content to be redrawn. We identify these chunks from the input prompt schedule for T2V models or matching input camera poses for I2V models.",
-    "The student receives the router's MosaiChunk under a smaller memory budget. It must therefore select useful sections rather than copy all of the teacher's context.",
-    "We minimize the mean squared error (MSE) between teacher and student predictions. Teacher predictions are fixed targets.",
-    "Gradients pass through the student's frozen DiT and the section value weights to the descriptor encoder; they do not pass through the discrete section selection. The stored KV and backbone parameters remain unchanged."
+    "Teacher: predict with whole historical chunks covering the returning content.",
+    "Student: predict with a smaller memory selected by the router.",
+    "Match the teacher’s predictions with a mean squared error loss.",
+    "Update the descriptor encoder; keep the backbone and stored KV frozen."
   ]
 };
   const durations={teaser:[3400,2600,2400,3000,4300,3000,2600],motivation:[2600,3600,3200,2600],architecture:[4400,3400,4200],training:[3000,3000,2700,3200]};
@@ -134,10 +134,14 @@
   function renderBenchmark(task){
     const isT2V=task==='t2v';
     $('#benchmark-input').textContent=isT2V?'Prompt':'Initial frame, prompt, and camera trajectory';
-    $('#benchmark-split-intro').textContent=isT2V
+    $('#benchmark-split-details').textContent=isT2V
       ? "The split contains 100 samples with scenarios disjoint from router training. Each model input extends Ring Forcing's three-stage appear–disappear–reappear design to four prompt segments, with a separate segment keeping the object out of sight. The nominal prompt transitions occur at 3.6, 6.2, and 11.2 seconds. The third segment therefore requests five seconds with the object out of sight, exceeding the largest sliding-window baseline's approximately three seconds of recent context."
       : "The split contains 150 scenes: 50 indoor and 100 outdoor. Each model input includes an initial frame from DL3DV, a prompt describing the scene, and a camera trajectory. We sample more diverse camera trajectories not seen during training: all 150 scenes have in-place rotation trajectories with 90°, 180°, and 360° settings. The 100 outdoor scenes additionally have trajectories combining these rotations with translation. For 90° and 180°, yaw increases linearly to the specified angle at the midpoint and then reverses to its initial value. The 360° trajectory instead completes one continuous full turn. Each input camera trajectory ends at its initial position and orientation.";
+    $('#benchmark-split-intro').textContent=isT2V
+      ? "Objects appear, disappear, stay out of sight for five seconds, then return."
+      : "The camera turns or moves away, then returns to its starting pose.";
     $('#benchmark-split-intro').dataset.paperCopy=`benchmark-${task}`;
+    $('#benchmark-split-details').dataset.paperCopy=`benchmark-${task}-details`;
     $('#contact-caption').dataset.paperCopy=`contact-${task}`;
     $('.benchmark-detail').dataset.task=task;
     $('#prompt-interaction').hidden=!isT2V;$('#camera-interaction').hidden=isT2V;
@@ -296,7 +300,7 @@
   }
   // Five explicit examples per split, drawn from the original video viewer.
   // The quantitative controls are independent of this qualitative carousel.
-  const featured={t2v:['t2v-11','t2v-01','t2v-04','t2v-14','t2v-17'],i2v:['i2v-01','i2v-02','i2v-03','i2v-11','i2v-20']};
+  const featured={t2v:['t2v-11','t2v-01','t2v-04','t2v-14','t2v-17'],i2v:['i2v-01','i2v-09','i2v-03','i2v-11','i2v-18']};
   function pageScene(offset=0,task=qualState.task,page=qualState.page[task]){
     const ids=featured[task],index=(page+offset+ids.length)%ids.length;
     return DATA.scenes.find(scene=>scene.id===ids[index]);

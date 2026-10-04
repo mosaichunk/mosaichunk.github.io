@@ -425,3 +425,42 @@ figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);
 .snapshot-flight>span{position:absolute;left:10px;top:10px;padding:4px 9px;border-radius:5px;background:#fffef5ed;color:#355c47;font-size:13px;font-weight:600;line-height:1.5}
 .enlarged-pair.single-frame{grid-template-columns:minmax(0,1fr);max-width:650px;margin:auto}
 @media(max-width:520px){.snapshot-flight>span{left:7px;top:7px;font-size:11px;padding:3px 7px}}
+
+
+/* Lead with the video results, then introduce the memory mechanism. */
+.qualitative-first{padding-top:12px}
+.qualitative-first .qualitative-showcase{min-height:0;margin-top:0;padding:0}
+.qualitative-first>.figure-intro{margin:28px auto 0}
+.qualitative-first>.figure-intro a{white-space:nowrap}
+.intro-section{padding-top:64px}
+.intro-section>.section-heading{margin-bottom:28px}
+.intro-section .hero-figure{margin:32px 0 0}
+@media(max-width:520px){
+  .qualitative-first{padding-top:8px}
+  .intro-section{padding-top:44px}
+}
+
+
+/* A short reading path, with technical details available on demand. */
+.method-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;list-style:none;padding:0;margin:0 0 28px}
+.method-steps li{min-width:0}
+.method-steps .figure-intro{margin:0;font-size:21px;line-height:1.55}
+.method-steps strong{display:block;margin-bottom:8px;color:#467d65}
+.copy-details{margin:24px auto 28px;max-width:var(--copy-width);border-top:1px solid #e4e9e6;border-bottom:1px solid #e4e9e6}
+.copy-details>summary{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 0;list-style:none;cursor:pointer;color:#467d65;font-size:20px;font-weight:600;line-height:1.5}
+.copy-details>summary::-webkit-details-marker{display:none}
+.copy-details>summary::after{content:'+';flex:none;font-size:24px;font-weight:400}
+.copy-details[open]>summary::after{content:'−'}
+.copy-details-body{padding:4px 0 8px}
+.copy-details-body>.figure-intro{margin:0 0 18px;font-size:20px;line-height:1.65;color:#64716a}
+.copy-details-body .equation{font-size:20px}
+@media(max-width:800px){
+  .method-steps{grid-template-columns:1fr;gap:18px}
+  .method-steps .figure-intro{font-size:var(--copy-size)}
+  .method-steps strong{margin-bottom:4px}
+}
+@media(max-width:520px){
+  .copy-details>summary{font-size:17px}
+  .copy-details-body>.figure-intro{font-size:18px}
+  .copy-details-body .equation{font-size:18px}
+}
