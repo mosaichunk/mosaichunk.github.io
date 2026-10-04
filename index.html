@@ -184,7 +184,7 @@
         </div>
         <p class="metric-readout" id="metric-readout" aria-live="polite">Hover or focus a point for its method, memory budget, and score.</p>
       </div>
-      <p class="figure-intro" data-paper-copy="results-interpretation"><strong>Better consistency with less memory.</strong> Using one chunk on T2V, MosaiChunk exceeds MoC at two (<strong>0.899 vs. 0.841 CLIP</strong>). On I2V rotation, half a chunk suffices (<strong>0.815 vs. 0.807</strong>).</p>
+      <p class="figure-intro" data-paper-copy="results-interpretation"><strong>Better consistency with less memory.</strong> On T2V, MosaiChunk with 1 chunk of far memory achieves higher CLIP similarity than MoC with 2 chunks (<strong>0.899 vs. 0.841</strong>). On I2V rotation, MosaiChunk with 0.5 chunks achieves higher CLIP similarity than MoC with 2 chunks (<strong>0.815 vs. 0.807</strong>).</p>
       <details class="copy-details"><summary>Evaluation details</summary><div class="copy-details-body">
 <p class="figure-intro" data-paper-copy="results-budget">Let F_c denote the far memory used to generate chunk c, and ‖F_c‖ its budget in video-chunk equivalents. For example, ‖F_c‖ = 1 means that the size of the far memory is equivalent to one video chunk. Retrieval methods keep their sliding window fixed, whereas Base matches the total active KV cache budget by retaining additional recent chunks.</p>
 <p class="figure-intro" data-paper-copy="results-metrics">CLIP similarity and LPIPS assess consistency between departure and revisit frames. T2V pairs are manually marked; I2V pairs use the conditioning frame and a revisit selected from Pi3X-reconstructed camera poses. We report medians over scenes.</p>
