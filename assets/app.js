@@ -262,6 +262,8 @@
 
   const videoBudget=2;
   const qualitativePlaybackRate=3;
+  const methodOrder=['base','moc','mc'];
+  const orderedItems=scene=>[...scene.budgets[String(videoBudget)]].sort((a,b)=>methodOrder.indexOf(a.method)-methodOrder.indexOf(b.method));
   const qualState={task:'t2v',page:{t2v:0,i2v:0}};
   $$('#qual-tabs button').forEach(button=>button.addEventListener('click',()=>{
     if(button.dataset.task===qualState.task)return;
@@ -269,10 +271,29 @@
     pressed($$('#qual-tabs button'),button);qualState.task=button.dataset.task;transitionVideos(direction);
   }));
 
-  let videos=[],videoItems=[],videoEpoch=0,playing=false,syncTimer=null;
+  let videos=[],videoItems=[],videoEpoch=0,playing=false,starting=false,syncTimer=null;
+  let playbackRequest=0,playbackFrame=0,loopTimer=null,loopPending=false;
+  let userPaused=false,videosInView=false,autoplayBlocked=false,snapshots=[];
+  const visibleStages=new Set();
   let carouselMoving=false,carouselDirection=1,carouselAnimations=[];
   let renderedTask=null,renderedPage=0;
-  function pauseVideos(){playing=false;clearInterval(syncTimer);syncTimer=null;videos.forEach(v=>v.pause());$('#video-play').innerHTML=playbackButton('play','Play all');}
+  function videoPlayButton(mode,label){
+    const button=$('#video-play');button.innerHTML=playbackButton(mode,label);
+    button.setAttribute('aria-label',`${label} synchronized videos at 3 times speed`);
+    button.setAttribute('aria-pressed',String(playing||starting));
+  }
+  function pauseVideos(manual=false){
+    if(manual)userPaused=true;
+    ++playbackRequest;playing=false;starting=false;
+    clearInterval(syncTimer);clearTimeout(loopTimer);cancelAnimationFrame(playbackFrame);
+    syncTimer=null;loopTimer=null;
+    videos.forEach(v=>v.pause());
+    snapshots.forEach(state=>state.captures.forEach(capture=>capture.animation?.pause()));
+    videoPlayButton('play','Play all');
+  }
+  function maybeAutoplay(){
+    if(videosInView&&!document.hidden&&!userPaused&&!autoplayBlocked&&!reducedMotion.matches&&!carouselMoving&&!$('#pair-dialog').open)startVideos();
+  }
   // Five explicit examples per split, drawn from the original video viewer.
   // The quantitative controls are independent of this qualitative carousel.
   const featured={t2v:['t2v-11','t2v-01','t2v-04','t2v-14','t2v-17'],i2v:['i2v-01','i2v-02','i2v-03','i2v-11','i2v-20']};
@@ -325,6 +346,7 @@
       carouselMoving=false;carousel.inert=false;slide.inert=false;
       slide.removeAttribute('aria-busy');delete slide.dataset.transition;
       if(qualState.task!==renderedTask||qualState.page[qualState.task]!==renderedPage)transitionVideos(carouselDirection);
+      else maybeAutoplay();
     }
   }
   // Settle a moving track before its responsive dimensions change.
@@ -355,6 +377,9 @@
   }
   function renderVideos(task=qualState.task,page=qualState.page[task]){
     pauseVideos();++videoEpoch;
+    videoObserver.disconnect();visibleStages.clear();videosInView=false;
+    snapshots.forEach(state=>state.captures.forEach(clearCapture));snapshots=[];
+    userPaused=false;autoplayBlocked=false;loopPending=false;
     if($('#pair-dialog').open)$('#pair-dialog').close();
     // Unload the previous three movies when changing the scene or split.
     videos.forEach(video=>{video.removeAttribute('src');video.load();});
@@ -377,43 +402,115 @@
     $('#video-prompt-summary').textContent=promptExcerpt(scene);
     $('#video-prompt-text').replaceChildren(...scene.prompts.map(text=>{const p=document.createElement('p');p.textContent=text;return p;}));
     $('#video-slide .video-prompt').open=false;
-    videoItems=[...scene.budgets[String(videoBudget)]].sort((a,b)=>['mc','moc','base'].indexOf(a.method)-['mc','moc','base'].indexOf(b.method));
+    videoItems=orderedItems(scene);
     $('#video-setting').textContent=`${videoBudget}-chunk far memory · ${scene.trajectoryLabel}`;
     $('#videos').replaceChildren(...buildVideoCards(scene,true));
     videos=$$('#videos video');$('#video-progress').value='0';$('#video-time').textContent='0.0 s';
-    videos[0].addEventListener('timeupdate',()=>{if(playing){$('#video-progress').value=String(videos[0].currentTime/videoItems[0].duration*1000);$('#video-time').textContent=videos[0].currentTime.toFixed(1)+' s';}});
+    $$('#videos .video-stage').forEach(stage=>videoObserver.observe(stage));
   }
   function buildVideoCards(scene,interactive){
-    return [...scene.budgets[String(videoBudget)]].sort((a,b)=>['mc','moc','base'].indexOf(a.method)-['mc','moc','base'].indexOf(b.method)).map(item=>{
+    return orderedItems(scene).map(item=>{
       const card=document.createElement('div');card.className=`video-item ${methodClass(item.method)}`;
+      const stage=document.createElement('div');stage.className='video-stage';
       const label=document.createElement('div');label.className='video-label';const title=document.createElement('b');title.textContent=item.label;const score=document.createElement('span');score.textContent=`CLIP ↑ ${item.clipScore.toFixed(3)}`;label.append(title,score);
       const video=document.createElement(interactive?'video':'img');
       if(interactive){
         video.muted=true;video.playsInline=true;video.preload='none';video.poster='viewer/'+item.departureImage;video.src='viewer/'+item.video;
         video.defaultPlaybackRate=qualitativePlaybackRate;video.playbackRate=qualitativePlaybackRate;
-        video.setAttribute('aria-label',`${item.label}, ${scene.title}`);video.addEventListener('ended',()=>{if(playing)pauseVideos();});
+        video.setAttribute('aria-label',`${item.label}, ${scene.title}`);video.addEventListener('ended',finishVideoLoop);
       }else{video.className='preview-video';video.src='viewer/'+item.departureImage;video.alt='';}
+      stage.append(video);
+      const state={video,item,card,stage,captures:[]};
       // Reuse the viewer's exact evaluation images and original frame times.
       // Each method keeps its own revisit; frames are never shared across runs.
       const pair=document.createElement('div');pair.className='pair-grid';
       ['departure','revisit'].forEach(kind=>{
         const button=document.createElement(interactive?'button':'span');button.className='pair-button';button.dataset.kind=kind;
-        if(interactive){button.type='button';button.setAttribute('aria-label',`Enlarge ${item.label} departure and revisit frames`);}
+        if(interactive){button.type='button';button.disabled=true;button.setAttribute('aria-label',`Enlarge captured ${item.label} frames`);}
         const caption=document.createElement('span');caption.className='frame-label';
         const name=document.createElement('span');name.textContent=kind==='departure'?'Departure':'Revisit';
         const time=document.createElement('span');time.className='frame-time';time.textContent=`${(item[kind+'Frame']/item.fps).toFixed(2)} s`;
         caption.append(name,time);
         const image=document.createElement('img');image.src='viewer/'+item[kind+'Image'];image.alt=`${scene.title} — ${item.label} ${kind} frame`;image.decoding='async';
         image.style.aspectRatio=`${item.width} / ${item.height}`;
-        button.append(caption,image);if(interactive)button.addEventListener('click',()=>openPair(item,scene));pair.append(button);
+        const well=document.createElement('span');well.className='frame-well';well.style.aspectRatio=`${item.width} / ${item.height}`;well.append(image);
+        button.append(caption,well);if(interactive)button.addEventListener('click',()=>openPair(state,scene));pair.append(button);
+        state.captures.push({kind,time:item[kind+'Frame']/item.fps,button,image,well,captured:false,animation:null,ghost:null});
       });
-      card.dataset.method=item.method;card.append(label,video,pair);return card;
+      if(interactive)snapshots.push(state);
+      card.dataset.method=item.method;card.append(label,stage,pair);return card;
     });
   }
-  function openPair(item,scene){
-    pauseVideos();
+  function clearCapture(capture){
+    capture.animation?.cancel();capture.ghost?.remove();capture.animation=null;capture.ghost=null;
+  }
+  function settleCapture(capture){
+    clearCapture(capture);capture.button.classList.add('is-captured');capture.button.classList.remove('is-capturing');capture.button.disabled=false;
+  }
+  function resetCapture(capture){
+    clearCapture(capture);capture.captured=false;
+    capture.button.classList.remove('is-captured','is-capturing');capture.button.disabled=true;
+  }
+  function captureFrame(state,capture,animate){
+    capture.captured=true;
+    const source=state.stage.getBoundingClientRect();
+    // A frozen copy of the exact evaluation frame moves from the movie into
+    // its own slot. Offscreen and reduced-motion captures settle immediately.
+    if(!animate||reducedMotion.matches||source.bottom<=0||source.top>=innerHeight)return settleCapture(capture);
+    const target=capture.well.getBoundingClientRect(),card=state.card.getBoundingClientRect();
+    // Bounding rectangles include the published desktop CSS zoom, while
+    // positioned elements and animation translations use local CSS pixels.
+    const scale=card.width/state.card.offsetWidth;
+    const ghost=document.createElement('div');ghost.className='snapshot-flight';ghost.setAttribute('aria-hidden','true');
+    const image=capture.image.cloneNode();image.alt='';
+    const label=document.createElement('span');label.textContent=capture.kind==='departure'?'Departure captured':'Revisit captured';
+    ghost.append(image,label);
+    Object.assign(ghost.style,{left:`${(source.left-card.left)/scale}px`,top:`${(source.top-card.top)/scale}px`,width:`${source.width/scale}px`,height:`${source.height/scale}px`});
+    state.card.append(ghost);capture.ghost=ghost;capture.button.classList.add('is-capturing');
+    const destination=`translate(${(target.left-source.left)/scale}px,${(target.top-source.top)/scale}px) scale(${target.width/source.width},${target.height/source.height})`;
+    const animation=ghost.animate([
+      {transform:'translate(0,0) scale(1)',opacity:0,offset:0},
+      {transform:'translate(0,0) scale(1)',opacity:1,offset:.08},
+      {transform:'translate(0,0) scale(1)',opacity:1,offset:.28},
+      {transform:destination,opacity:1,offset:1}
+    ],{duration:1050,easing:'cubic-bezier(.22,.61,.36,1)',fill:'forwards'});
+    capture.animation=animation;
+    animation.finished.then(()=>{if(capture.animation===animation)settleCapture(capture);}).catch(()=>{});
+  }
+  function updateCaptures(state,time,animate){
+    state.captures.forEach(capture=>{
+      const reached=time+1/(state.item.fps*2)>=capture.time;
+      if(reached&&!capture.captured)captureFrame(state,capture,animate);
+      else if(!reached&&capture.captured)resetCapture(capture);
+      else if(reached&&!animate&&capture.animation)settleCapture(capture);
+    });
+  }
+  function tickVideos(){
+    if(!playing)return;
+    snapshots.forEach(state=>{if(!state.video.seeking)updateCaptures(state,state.video.currentTime,true);});
+    const time=videos[0].currentTime;
+    $('#video-progress').value=String(time/videoItems[0].duration*1000);
+    $('#video-time').textContent=time.toFixed(1)+' s';
+    playbackFrame=requestAnimationFrame(tickVideos);
+  }
+  function finishVideoLoop(){
+    if(!playing||loopPending||!videos.every(video=>video.ended))return;
+    loopPending=true;clearInterval(syncTimer);cancelAnimationFrame(playbackFrame);
+    videos.forEach(video=>video.pause());
+    // Some annotated revisits are the very last frame. Give every capture
+    // time to land and leave the completed comparison visible before looping.
+    snapshots.forEach(state=>updateCaptures(state,state.item.duration,true));
+    $('#video-progress').value='1000';$('#video-time').textContent=videoItems[0].duration.toFixed(1)+' s';
+    loopTimer=setTimeout(()=>{if(playing){playing=false;startVideos(true);}},2400);
+  }
+  function openPair(state,scene){
+    const {item}=state;
+    pauseVideos(true);
+    state.captures.filter(capture=>capture.captured).forEach(settleCapture);
     $('#pair-dialog-title').textContent=`${scene.title} · ${item.label} · CLIP ${item.clipScore.toFixed(3)}`;
-    $('#enlarged-pair').replaceChildren(...['departure','revisit'].map(kind=>{
+    const captured=state.captures.filter(capture=>capture.captured);
+    $('#enlarged-pair').classList.toggle('single-frame',captured.length===1);
+    $('#enlarged-pair').replaceChildren(...captured.map(({kind})=>{
       const figure=document.createElement('figure'),caption=document.createElement('figcaption'),image=document.createElement('img');
       caption.textContent=`${kind==='departure'?'Departure':'Revisit'} · ${(item[kind+'Frame']/item.fps).toFixed(2)} s · frame ${item[kind+'Frame']}`;
       image.src='viewer/'+item[kind+'Image'];image.alt=`${scene.title} — ${item.label} ${kind} frame`;
@@ -423,33 +520,95 @@
   }
   $('#close-pair').addEventListener('click',()=>$('#pair-dialog').close());
   $('#pair-dialog').addEventListener('click',event=>{if(event.target===$('#pair-dialog'))$('#pair-dialog').close();});
-  function ready(video){return video.readyState>=1?Promise.resolve():new Promise((resolve,reject)=>{video.addEventListener('loadedmetadata',resolve,{once:true});video.addEventListener('error',reject,{once:true});video.load();});}
-  async function seekVideos(times){
-    const epoch=videoEpoch, targets=videos.slice();
-    await Promise.all(targets.map(ready));if(epoch!==videoEpoch)return;
-    targets.forEach((v,i)=>{v.currentTime=Math.max(0,Math.min(times[i],v.duration-.05));});
+  const videoLoads=new WeakMap();
+  function ready(video){
+    if(video.readyState>=1)return Promise.resolve();
+    if(videoLoads.has(video))return videoLoads.get(video);
+    const promise=new Promise((resolve,reject)=>{
+      const done=event=>{
+        // load() also aborts the initial preload='none' resource selection.
+        // Only unloading an obsolete scene should cancel its pending load.
+        if(event.type==='abort'&&video.hasAttribute('src'))return;
+        ['loadedmetadata','error','abort'].forEach(type=>video.removeEventListener(type,done));
+        videoLoads.delete(video);
+        if(event.type==='loadedmetadata')resolve();else reject(new Error('Video could not load'));
+      };
+      ['loadedmetadata','error','abort'].forEach(type=>video.addEventListener(type,done));video.load();
+    });
+    videoLoads.set(video,promise);return promise;
   }
-  $('#video-play').addEventListener('click',async()=>{
-    if(playing)return pauseVideos();
-    const epoch=videoEpoch;
-    $('#video-play').innerHTML='… <span>Loading</span>';
+  let seekRequest=0;
+  async function seekVideos(times){
+    const epoch=videoEpoch,request=++seekRequest,targets=videos.slice();
+    await Promise.all(targets.map(ready));if(epoch!==videoEpoch||request!==seekRequest)return;
+    targets.forEach((v,i)=>{
+      const time=Math.max(0,Math.min(times[i],v.duration-.001));
+      v.currentTime=time;updateCaptures(snapshots[i],time,false);
+    });
+    loopPending=false;
+  }
+  async function startVideos(restart=false){
+    if(playing||starting||!videos.length)return;
+    const epoch=videoEpoch,request=++playbackRequest,targets=videos.slice();
+    const current=()=>epoch===videoEpoch&&request===playbackRequest;
+    starting=true;videoPlayButton('play','Loading');
     try{
-      await Promise.all(videos.map(ready));if(epoch!==videoEpoch)return;
-      const time=videos[0].ended?0:videos[0].currentTime;
-      videos.forEach(v=>{v.playbackRate=qualitativePlaybackRate;v.currentTime=Math.min(time,v.duration-.05);});
-      await Promise.all(videos.map(v=>v.play()));if(epoch!==videoEpoch)return;
-      playing=true;$('#video-play').innerHTML=playbackButton('pause','Pause');
-      syncTimer=setInterval(()=>{if(!playing)return;const master=videos[0];videos.slice(1).forEach(v=>{if(Math.abs(v.currentTime-master.currentTime)>.15)v.currentTime=Math.min(master.currentTime,v.duration-.05);});},400);
-    }catch{if(epoch!==videoEpoch)return;pauseVideos();$('#video-time').textContent='Could not load video';}
+      await Promise.all(targets.map(ready));if(!current())return;
+      const rewind=restart||loopPending||targets.some(v=>v.ended||v.currentTime>=v.duration-.08);
+      const time=rewind?0:targets[0].currentTime;
+      loopPending=false;
+      if(rewind)snapshots.forEach(state=>state.captures.forEach(resetCapture));
+      targets.forEach(v=>{v.playbackRate=qualitativePlaybackRate;if(rewind||Math.abs(v.currentTime-time)>.06)v.currentTime=time;});
+      await Promise.all(targets.map(v=>v.play()));if(!current())return;
+      starting=false;playing=true;autoplayBlocked=false;videoPlayButton('pause','Pause');
+      snapshots.forEach(state=>state.captures.forEach(capture=>capture.animation?.play()));
+      tickVideos();
+      syncTimer=setInterval(()=>{
+        if(!playing||loopPending)return;
+        const master=targets[0];
+        if(master.ended)return;
+        targets.slice(1).forEach(v=>{if(!v.ended&&!v.seeking&&Math.abs(v.currentTime-master.currentTime)>.15)v.currentTime=Math.min(master.currentTime,v.duration-.001);});
+      },300);
+    }catch(error){
+      if(!current())return;
+      pauseVideos();autoplayBlocked=true;
+      if(error.name!=='NotAllowedError'&&error.name!=='AbortError')$('#video-time').textContent='Could not load video';
+    }
+  }
+  $('#video-play').addEventListener('click',()=>{
+    if(playing||starting)return pauseVideos(true);
+    userPaused=false;autoplayBlocked=false;startVideos();
   });
-  $('#video-progress').addEventListener('input',async()=>{pauseVideos();const time=Number($('#video-progress').value)/1000*videoItems[0].duration;$('#video-time').textContent=time.toFixed(1)+' s';try{await seekVideos(videos.map(()=>time));}catch{$('#video-time').textContent='Could not load video';}});
-  $('#video-revisit').addEventListener('click',async()=>{pauseVideos();try{await seekVideos(videoItems.map(v=>v.revisitFrame/v.fps));$('#video-time').textContent='Revisit';$('#video-progress').value=String(videoItems[0].revisitFrame/videoItems[0].frames*1000);}catch{$('#video-time').textContent='Could not load video';}});
+  $('#video-progress').addEventListener('input',async()=>{
+    pauseVideos(true);const epoch=videoEpoch,time=Number($('#video-progress').value)/1000*videoItems[0].duration;
+    $('#video-time').textContent=time.toFixed(1)+' s';
+    try{await seekVideos(videos.map(()=>time));}catch{if(epoch===videoEpoch)$('#video-time').textContent='Could not load video';}
+  });
+  $('#video-revisit').addEventListener('click',async()=>{
+    pauseVideos(true);const epoch=videoEpoch;
+    try{
+      await seekVideos(videoItems.map(v=>v.revisitFrame/v.fps));if(epoch!==videoEpoch)return;
+      $('#video-time').textContent='Revisit';$('#video-progress').value=String(videoItems[0].revisitFrame/videoItems[0].frames*1000);
+    }catch{if(epoch===videoEpoch)$('#video-time').textContent='Could not load video';}
+  });
   $('#video-prev').addEventListener('click',()=>turnPage(-1));
   $('#video-next').addEventListener('click',()=>turnPage(1));
   $('#video-peek-prev').addEventListener('click',()=>turnPage(-1));
   $('#video-peek-next').addEventListener('click',()=>turnPage(1));
-  new IntersectionObserver(entries=>{if(!entries[0].isIntersecting)pauseVideos();},{threshold:.05}).observe($('#video-slide'));
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseVideos();});
+  const videoObserver=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting&&entry.intersectionRatio>=.15)visibleStages.add(entry.target);
+      else visibleStages.delete(entry.target);
+    });
+    videosInView=visibleStages.size>0;
+    if(videosInView)maybeAutoplay();else pauseVideos();
+  },{threshold:[0,.15]});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseVideos();else maybeAutoplay();});
+  reducedMotion.addEventListener('change',()=>{
+    if(reducedMotion.matches){pauseVideos();snapshots.forEach(state=>state.captures.filter(capture=>capture.captured).forEach(settleCapture));}
+    else maybeAutoplay();
+  });
+  window.addEventListener('resize',()=>snapshots.forEach(state=>state.captures.filter(capture=>capture.captured).forEach(settleCapture)));
 
   renderBenchmark('t2v');renderCamera();renderResults();renderVideos();
   window.PAPER_MATH.render(document);

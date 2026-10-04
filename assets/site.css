@@ -406,3 +406,22 @@ figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);
   .qualitative-showcase{--showcase-gutter:clamp(48px,calc(4vw / .75),96px)}
   #pair-dialog{width:min(1080px,calc(94vw / .75));max-width:calc(94vw / .75)}
 }
+
+/* Evaluation frames arrive from the movie at their annotated moments. */
+.video-comparison .video-item{position:relative}
+.video-stage{position:relative;min-width:0}
+.frame-well{display:block;position:relative;overflow:hidden;border-radius:6px;background:#f4f6f5;outline:1px dashed #dce3df;outline-offset:-1px}
+.pair-button .frame-well img{opacity:0;outline:0;border-radius:6px}
+.pair-button .frame-time{visibility:hidden}
+.pair-button:disabled{cursor:default}
+.pair-button:not(.is-captured) .frame-label{color:#929d96}
+.pair-button.is-capturing .frame-well{outline-color:#78a28d;background:#edf3ef}
+.pair-button.is-captured .frame-well{outline:1px solid #dce3df}
+.pair-button.is-captured .frame-well img{opacity:1}
+.pair-button.is-captured .frame-time{visibility:visible}
+.pair-button.is-captured:hover .frame-well{outline:2px solid #84ab96}
+.snapshot-flight{position:absolute;z-index:5;pointer-events:none;transform-origin:top left;border-radius:8px;box-shadow:0 0 0 3px #fff,0 0 0 5px #80a994,0 12px 30px #1c3b2926;overflow:hidden}
+.snapshot-flight img{display:block;width:100%;height:100%;object-fit:contain;background:#f4f6f5}
+.snapshot-flight>span{position:absolute;left:10px;top:10px;padding:4px 9px;border-radius:5px;background:#fffef5ed;color:#355c47;font-size:13px;font-weight:600;line-height:1.5}
+.enlarged-pair.single-frame{grid-template-columns:minmax(0,1fr);max-width:650px;margin:auto}
+@media(max-width:520px){.snapshot-flight>span{left:7px;top:7px;font-size:11px;padding:3px 7px}}
