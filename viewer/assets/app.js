@@ -253,7 +253,7 @@
       p.textContent = state.dataset === 't2v' ? `${i+1}. ${prompt}` : prompt;
       return p;
     }));
-    const entries = ['mc', 'moc', 'base'].map(method =>
+    const entries = ['base', 'moc', 'mc'].map(method =>
       scene.budgets[String(state.budget)].find(entry => entry.method === method));
     const cards = entries.map(e => buildCard(e,scene));
     $('comparison').replaceChildren(...cards);
