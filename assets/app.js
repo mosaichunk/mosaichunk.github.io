@@ -264,6 +264,7 @@
   }));
   bindSelection('result-trajectory',value=>{state.trajectory=value;renderResults();});
 
+  const videoMediaUrl=path=>'viewer/'+path+'?v=20261010-revisit';
   const videoBudget=2;
   const qualitativePlaybackRate=3;
   const methodOrder=['base','moc','mc'];
@@ -278,6 +279,10 @@
   let videos=[],videoItems=[],videoEpoch=0,playing=false,starting=false,syncTimer=null;
   let playbackRequest=0,playbackFrame=0,loopTimer=null,loopPending=false;
   let userPaused=false,videosInView=false,autoplayBlocked=false,snapshots=[];
+  let playbackFinished=false,progressScrubbing=false;
+  function videoMasterIndex(){return videoItems.reduce((best,item,i)=>item.duration>videoItems[best].duration?i:best,0);}
+  function videoDuration(){return videoItems[videoMasterIndex()]?.duration||0;}
+  function lastVideoTime(i){return (videoItems[i].frames-1)/videoItems[i].fps;}
   const visibleStages=new Set();
   let carouselMoving=false,carouselDirection=1,carouselAnimations=[];
   let renderedTask=null,renderedPage=0;
@@ -293,14 +298,14 @@
     syncTimer=null;loopTimer=null;
     videos.forEach(v=>v.pause());
     snapshots.forEach(state=>state.captures.forEach(capture=>capture.animation?.pause()));
-    videoPlayButton('play','Play all');
+    videoPlayButton('play',playbackFinished?'Replay':'Play all');
   }
   function maybeAutoplay(){
-    if(videosInView&&!document.hidden&&!userPaused&&!autoplayBlocked&&!reducedMotion.matches&&!carouselMoving&&!$('#pair-dialog').open)startVideos();
+    if(!playbackFinished&&videosInView&&!document.hidden&&!userPaused&&!autoplayBlocked&&!reducedMotion.matches&&!carouselMoving&&!$('#pair-dialog').open)startVideos();
   }
   // Five explicit examples per split, drawn from the original video viewer.
   // The quantitative controls are independent of this qualitative carousel.
-  const featured={t2v:['t2v-11','t2v-01','t2v-04','t2v-14','t2v-17'],i2v:['i2v-01','i2v-09','i2v-03','i2v-11','i2v-18']};
+  const featured={t2v:['t2v-08','t2v-01','t2v-06','t2v-14','t2v-17'],i2v:['i2v-01','i2v-09','i2v-03','i2v-11','i2v-18']};
   function pageScene(offset=0,task=qualState.task,page=qualState.page[task]){
     const ids=featured[task],index=(page+offset+ids.length)%ids.length;
     return DATA.scenes.find(scene=>scene.id===ids[index]);
@@ -383,7 +388,7 @@
     pauseVideos();++videoEpoch;
     videoObserver.disconnect();visibleStages.clear();videosInView=false;
     snapshots.forEach(state=>state.captures.forEach(clearCapture));snapshots=[];
-    userPaused=false;autoplayBlocked=false;loopPending=false;
+    userPaused=false;autoplayBlocked=false;loopPending=false;playbackFinished=false;progressScrubbing=false;
     if($('#pair-dialog').open)$('#pair-dialog').close();
     // Unload the previous three movies when changing the scene or split.
     videos.forEach(video=>{video.removeAttribute('src');video.load();});
@@ -419,10 +424,10 @@
       const label=document.createElement('div');label.className='video-label';const title=document.createElement('b');title.textContent=item.label;const score=document.createElement('span');score.textContent=`CLIP ↑ ${item.clipScore.toFixed(3)}`;label.append(title,score);
       const video=document.createElement(interactive?'video':'img');
       if(interactive){
-        video.muted=true;video.playsInline=true;video.preload='none';video.poster='viewer/'+item.departureImage;video.src='viewer/'+item.video;
+        video.muted=true;video.defaultMuted=true;video.playsInline=true;video.preload='none';video.poster=videoMediaUrl(item.departureImage);video.src=videoMediaUrl(item.video);
         video.defaultPlaybackRate=qualitativePlaybackRate;video.playbackRate=qualitativePlaybackRate;
         video.setAttribute('aria-label',`${item.label}, ${scene.title}`);video.addEventListener('ended',finishVideoLoop);
-      }else{video.className='preview-video';video.src='viewer/'+item.departureImage;video.alt='';}
+      }else{video.className='preview-video';video.src=videoMediaUrl(item.departureImage);video.alt='';}
       stage.append(video);
       const state={video,item,card,stage,captures:[]};
       // Reuse the viewer's exact evaluation images and original frame times.
@@ -435,7 +440,7 @@
         const name=document.createElement('span');name.textContent=kind==='departure'?'Departure':'Revisit';
         const time=document.createElement('span');time.className='frame-time';time.textContent=`${(item[kind+'Frame']/item.fps).toFixed(2)} s`;
         caption.append(name,time);
-        const image=document.createElement('img');image.src='viewer/'+item[kind+'Image'];image.alt=`${scene.title} — ${item.label} ${kind} frame`;image.decoding='async';
+        const image=document.createElement('img');image.src=videoMediaUrl(item[kind+'Image']);image.alt=`${scene.title} — ${item.label} ${kind} frame`;image.decoding='async';
         image.style.aspectRatio=`${item.width} / ${item.height}`;
         const well=document.createElement('span');well.className='frame-well';well.style.aspectRatio=`${item.width} / ${item.height}`;well.append(image);
         button.append(caption,well);if(interactive)button.addEventListener('click',()=>openPair(state,scene));pair.append(button);
@@ -492,20 +497,21 @@
   function tickVideos(){
     if(!playing)return;
     snapshots.forEach(state=>{if(!state.video.seeking)updateCaptures(state,state.video.currentTime,true);});
-    const time=videos[0].currentTime;
-    $('#video-progress').value=String(time/videoItems[0].duration*1000);
-    $('#video-time').textContent=time.toFixed(1)+' s';
+    const time=videos[videoMasterIndex()].currentTime;
+    if(!progressScrubbing){
+      $('#video-progress').value=String(time/videoDuration()*1000);
+      $('#video-time').textContent=time.toFixed(1)+' s';
+    }
     playbackFrame=requestAnimationFrame(tickVideos);
   }
   function finishVideoLoop(){
-    if(!playing||loopPending||!videos.every(video=>video.ended))return;
-    loopPending=true;clearInterval(syncTimer);cancelAnimationFrame(playbackFrame);
+    if(!playing||!videos.every((video,i)=>video.ended||video.currentTime>=lastVideoTime(i)))return;
+    playing=false;starting=false;playbackFinished=true;loopPending=false;
+    clearInterval(syncTimer);clearTimeout(loopTimer);cancelAnimationFrame(playbackFrame);
     videos.forEach(video=>video.pause());
-    // Some annotated revisits are the very last frame. Give every capture
-    // time to land and leave the completed comparison visible before looping.
     snapshots.forEach(state=>updateCaptures(state,state.item.duration,true));
-    $('#video-progress').value='1000';$('#video-time').textContent=videoItems[0].duration.toFixed(1)+' s';
-    loopTimer=setTimeout(()=>{if(playing){playing=false;startVideos(true);}},2400);
+    $('#video-progress').value='1000';$('#video-time').textContent=videoDuration().toFixed(1)+' s';
+    videoPlayButton('play','Replay');
   }
   function openPair(state,scene){
     const {item}=state;
@@ -517,7 +523,7 @@
     $('#enlarged-pair').replaceChildren(...captured.map(({kind})=>{
       const figure=document.createElement('figure'),caption=document.createElement('figcaption'),image=document.createElement('img');
       caption.textContent=`${kind==='departure'?'Departure':'Revisit'} · ${(item[kind+'Frame']/item.fps).toFixed(2)} s · frame ${item[kind+'Frame']}`;
-      image.src='viewer/'+item[kind+'Image'];image.alt=`${scene.title} — ${item.label} ${kind} frame`;
+      image.src=videoMediaUrl(item[kind+'Image']);image.alt=`${scene.title} — ${item.label} ${kind} frame`;
       figure.append(caption,image);return figure;
     }));
     $('#pair-dialog').showModal();
@@ -544,12 +550,16 @@
   let seekRequest=0;
   async function seekVideos(times){
     const epoch=videoEpoch,request=++seekRequest,targets=videos.slice();
+    // Chromium decoders parked on the final frame need a reset before rewinding.
+    targets.forEach((v,i)=>{
+      if(v.currentTime>=lastVideoTime(i)-.001&&times[i]<lastVideoTime(i)-1/videoItems[i].fps)v.load();
+    });
     await Promise.all(targets.map(ready));if(epoch!==videoEpoch||request!==seekRequest)return;
     targets.forEach((v,i)=>{
-      const time=Math.max(0,Math.min(times[i],v.duration-.001));
+      const time=Math.max(0,Math.min(times[i],lastVideoTime(i)));
       v.currentTime=time;updateCaptures(snapshots[i],time,false);
     });
-    loopPending=false;
+    loopPending=false;playbackFinished=false;
   }
   async function startVideos(restart=false){
     if(playing||starting||!videos.length)return;
@@ -558,20 +568,33 @@
     starting=true;videoPlayButton('play','Loading');
     try{
       await Promise.all(targets.map(ready));if(!current())return;
-      const rewind=restart||loopPending||targets.some(v=>v.ended||v.currentTime>=v.duration-.08);
-      const time=rewind?0:targets[0].currentTime;
-      loopPending=false;
-      if(rewind)snapshots.forEach(state=>state.captures.forEach(resetCapture));
-      targets.forEach(v=>{v.playbackRate=qualitativePlaybackRate;if(rewind||Math.abs(v.currentTime-time)>.06)v.currentTime=time;});
-      await Promise.all(targets.map(v=>v.play()));if(!current())return;
+      const master=targets[videoMasterIndex()];
+      const rewind=restart||playbackFinished||master.ended||master.currentTime>=lastVideoTime(videoMasterIndex())-.001;
+      const time=rewind?0:master.currentTime;
+      loopPending=false;playbackFinished=false;
+      if(rewind){
+        targets.forEach((v,i)=>{if(v.currentTime>=lastVideoTime(i)-.001)v.load();});
+        await Promise.all(targets.map(ready));if(!current())return;
+        snapshots.forEach(state=>state.captures.forEach(resetCapture));
+      }
+      const active=targets.filter((v,i)=>rewind||time<lastVideoTime(i));
+      targets.forEach((v,i)=>{
+        v.playbackRate=qualitativePlaybackRate;
+        const target=Math.min(time,lastVideoTime(i));
+        if(rewind||Math.abs(v.currentTime-target)>.06)v.currentTime=target;
+      });
+      await Promise.all(active.map(v=>v.play()));if(!current())return;
       starting=false;playing=true;autoplayBlocked=false;videoPlayButton('pause','Pause');
       snapshots.forEach(state=>state.captures.forEach(capture=>capture.animation?.play()));
       tickVideos();
       syncTimer=setInterval(()=>{
         if(!playing||loopPending)return;
-        const master=targets[0];
-        if(master.ended)return;
-        targets.slice(1).forEach(v=>{if(!v.ended&&!v.seeking&&Math.abs(v.currentTime-master.currentTime)>.15)v.currentTime=Math.min(master.currentTime,v.duration-.001);});
+        const master=targets[videoMasterIndex()];
+        if(master.ended||master.seeking)return;
+        targets.forEach((v,i)=>{
+          if(v!==master&&!v.ended&&!v.paused&&!v.seeking&&Math.abs(v.currentTime-master.currentTime)>.15)
+            v.currentTime=Math.min(master.currentTime,lastVideoTime(i));
+        });
       },300);
     }catch(error){
       if(!current())return;
@@ -583,16 +606,24 @@
     if(playing||starting)return pauseVideos(true);
     userPaused=false;autoplayBlocked=false;startVideos();
   });
-  $('#video-progress').addEventListener('input',async()=>{
-    pauseVideos(true);const epoch=videoEpoch,time=Number($('#video-progress').value)/1000*videoItems[0].duration;
+  const progress=$('#video-progress');
+  const beginProgress=()=>{if(progressScrubbing)return;progressScrubbing=true;pauseVideos(true);};
+  const finishProgress=async()=>{
+    if(!progressScrubbing)return;
+    progressScrubbing=false;
+    const epoch=videoEpoch,time=Number(progress.value)/1000*videoDuration();
     $('#video-time').textContent=time.toFixed(1)+' s';
-    try{await seekVideos(videos.map(()=>time));}catch{if(epoch===videoEpoch)$('#video-time').textContent='Could not load video';}
-  });
+    try{await seekVideos(videos.map(()=>time));}
+    catch{if(epoch===videoEpoch)$('#video-time').textContent='Could not load video';}
+  };
+  progress.addEventListener('pointerdown',event=>{beginProgress();progress.setPointerCapture?.(event.pointerId);});
+  progress.addEventListener('input',()=>{beginProgress();$('#video-time').textContent=(Number(progress.value)/1000*videoDuration()).toFixed(1)+' s';});
+  ['change','pointerup','pointercancel','lostpointercapture','keyup','blur'].forEach(event=>progress.addEventListener(event,finishProgress));
   $('#video-revisit').addEventListener('click',async()=>{
     pauseVideos(true);const epoch=videoEpoch;
     try{
       await seekVideos(videoItems.map(v=>v.revisitFrame/v.fps));if(epoch!==videoEpoch)return;
-      $('#video-time').textContent='Revisit';$('#video-progress').value=String(videoItems[0].revisitFrame/videoItems[0].frames*1000);
+      $('#video-time').textContent='Revisit';$('#video-progress').value='1000';
     }catch{if(epoch===videoEpoch)$('#video-time').textContent='Could not load video';}
   });
   $('#video-prev').addEventListener('click',()=>turnPage(-1));

@@ -1,6 +1,7 @@
 /* Plain scripts and relative media paths intentionally support file:// opening. */
 'use strict';
 (() => {
+  const mediaUrl = path => path + '?v=20261010-revisit';
   const data = window.SUPPLEMENT;
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -17,6 +18,8 @@
   class Playback {
     constructor(entries, cards) {
       this.entries = entries;
+      this.master = entries.reduce((best,e,i) => e.duration > entries[best].duration ? i : best, 0);
+      this.intent = 0;
       this.cards = cards;
       this.videos = cards.map(c => c.querySelector('video'));
       this.pending = [null, null, null];
@@ -37,7 +40,7 @@
           }, {signal});
         }
         v.addEventListener('ended', () => {
-          if (state.sync) this.pauseAll();
+          if (state.sync && this.videos.every(v => v.ended)) this.pauseAll();
           this.update();
         }, {signal});
         v.addEventListener('error', () => {
@@ -53,14 +56,14 @@
         this.bindSlider(cards[i].querySelector('input[type=range]'), i, signal);
       });
       this.bindSlider($('master-seek'), null, signal);
-      $('master-seek').max = String(this.lastTime(0));
-      $('master-seek').step = String(1 / entries[0].fps);
+      $('master-seek').max = String(this.lastTime(this.master));
+      $('master-seek').step = String(1 / entries[this.master].fps);
       this.update();
     }
     lastTime(i) { return (this.entries[i].frames - 1) / this.entries[i].fps; }
     indices(i = null) { return i === null || state.sync ? [0,1,2] : [i]; }
     isPlaying() { return this.videos.some(v => !v.paused && !v.ended); }
-    pauseAll() { this.videos.forEach(v => v.pause()); this.update(); }
+    pauseAll() { this.intent++; this.videos.forEach(v => v.pause()); this.update(); }
     async playIndices(indices) {
       if (this.destroyed) return;
       this.videos.forEach(v => { v.playbackRate = state.rate; });
@@ -75,17 +78,18 @@
     }
     async playAll() {
       if (this.destroyed) return;
-      const target = this.videos[0].ended || this.videos[0].currentTime >= this.lastTime(0) - .02
-        ? 0 : this.videos[0].currentTime;
+      const intent = ++this.intent;
+      const target = this.videos[this.master].ended || this.videos[this.master].currentTime >= this.lastTime(this.master) - .02
+        ? 0 : this.videos[this.master].currentTime;
       if (state.sync) {
-        this.pauseAll();
+        this.videos.forEach(v => v.pause());
         this.seek(target);
         if (!await this.settled()) return;
       } else {
         this.videos.forEach((v,i) => { if (v.ended) this.queueSeek(i, 0); });
         if (!await this.settled()) return;
       }
-      if (!this.destroyed) await this.playIndices([0,1,2]);
+      if (!this.destroyed && this.intent === intent) await this.playIndices([0,1,2]);
     }
     toggle(i = null) {
       $('status').textContent = '';
@@ -109,6 +113,12 @@
       const v = this.videos[i];
       if (this.destroyed || v.readyState < 1 || v.seeking || this.pending[i] === null) return;
       const target = this.pending[i];
+      // Reset a decoder parked on its final frame before seeking backwards.
+      // Some Chromium builds otherwise report a successful seek at EOF.
+      if (v.currentTime >= this.lastTime(i) - .001 && target < this.lastTime(i) - 1 / this.entries[i].fps) {
+        v.load();
+        return; // Keep pending until loadedmetadata applies the requested time.
+      }
       this.pending[i] = null;
       if (Math.abs(v.currentTime - target) > .001) v.currentTime = target;
     }
@@ -130,29 +140,44 @@
       return !this.destroyed;
     }
     bindSlider(slider, index, signal) {
-      let active = false;
-      let resume = [];
+      let active = false, resume = [], version = 0;
       const begin = () => {
         if (active) return;
         active = true;
+        version++;
+        this.intent++;
         this.scrubbing = true;
+        this.activeSlider = slider;
         resume = this.indices(index).filter(i => !this.videos[i].paused && !this.videos[i].ended);
         this.indices(index).forEach(i => this.videos[i].pause());
       };
       const end = async () => {
-        if (!active) return;
+        if (!active || this.destroyed) return;
         active = false;
+        const expected = version;
+        const intent = this.intent;
+        const toResume = [...resume];
+        this.seek(Number(slider.value), index);
         const ready = await this.settled(this.indices(index));
+        if (this.destroyed || expected !== version) return;
+        this.activeSlider = null;
         this.scrubbing = false;
-        if (ready && resume.length) this.playIndices(resume);
+        if (ready && toResume.length && this.intent === intent) this.playIndices(toResume);
         this.update();
       };
-      slider.addEventListener('pointerdown', begin, {signal});
-      slider.addEventListener('input', () => { begin(); this.seek(Number(slider.value), index); }, {signal});
-      slider.addEventListener('change', end, {signal});
-      slider.addEventListener('pointerup', end, {signal});
-      slider.addEventListener('pointercancel', end, {signal});
-      slider.addEventListener('blur', end, {signal});
+      slider.addEventListener('pointerdown', e => {
+        begin();
+        slider.setPointerCapture?.(e.pointerId);
+      }, {signal});
+      slider.addEventListener('input', () => {
+        begin();
+        const t = Number(slider.value);
+        if (index === null) $('master-time').textContent = `${t.toFixed(2)} / ${this.entries[this.master].duration.toFixed(2)} s`;
+        else this.cards[index].querySelector('output').textContent = t.toFixed(2);
+      }, {signal});
+      for (const event of ['change', 'pointerup', 'pointercancel', 'lostpointercapture', 'keyup', 'blur']) {
+        slider.addEventListener(event, end, {signal});
+      }
     }
     update() {
       if (this.destroyed) return;
@@ -160,15 +185,15 @@
         const c = this.cards[i];
         const current = this.pending[i] ?? v.currentTime;
         const range = c.querySelector('input[type=range]');
-        range.value = String(current);
+        if (range !== this.activeSlider) range.value = String(current);
         c.querySelector('output').textContent = current.toFixed(2);
         c.querySelector('.local-play').textContent = v.paused || v.ended ? '▶' : 'Ⅱ';
         c.querySelector('.local-play').setAttribute('aria-label', `${v.paused ? 'Play' : 'Pause'} ${this.entries[i].label}`);
         c.querySelector('.video-state').textContent = v.readyState < 2 ? 'Loading…' : '';
       });
-      const t = this.pending[0] ?? this.videos[0].currentTime;
-      $('master-seek').value = String(t);
-      $('master-time').textContent = `${t.toFixed(2)} / ${this.entries[0].duration.toFixed(2)} s`;
+      const t = this.pending[this.master] ?? this.videos[this.master].currentTime;
+      if ($('master-seek') !== this.activeSlider) $('master-seek').value = String(t);
+      $('master-time').textContent = `${t.toFixed(2)} / ${this.entries[this.master].duration.toFixed(2)} s`;
       const playing = this.isPlaying();
       $('play-all').querySelector('.play-label').textContent = playing ? 'Pause all' : 'Play all';
       $('play-all').querySelector('.play-icon').textContent = playing ? 'Ⅱ' : '▶';
@@ -179,12 +204,13 @@
       this.raf = requestAnimationFrame(now => {
         this.raf = 0;
         if (this.destroyed) return;
-        const master = this.videos[0];
+        const master = this.videos[this.master];
         if (state.sync && !this.scrubbing && !master.paused && !master.seeking && now - this.lastSync > 100) {
           this.lastSync = now;
-          for (let i = 1; i < 3; i++) {
+          for (let i = 0; i < 3; i++) {
+            if (i === this.master) continue;
             const v = this.videos[i];
-            if (!v.paused && !v.seeking && v.readyState >= 2 && Math.abs(v.currentTime - master.currentTime) > .085) {
+            if (!v.ended && !v.paused && !v.seeking && v.readyState >= 2 && Math.abs(v.currentTime - master.currentTime) > .085) {
               this.queueSeek(i, master.currentTime);
             }
           }
@@ -205,7 +231,7 @@
     player.pauseAll();
     $('pair-dialog-title').textContent = `${scene.title} · ${entry.label} · CLIP ${entry.clipScore.toFixed(3)}`;
     $('enlarged-pair').innerHTML = ['departure','revisit'].map(kind =>
-      `<figure><figcaption>${kind === 'departure' ? 'Departure' : 'Revisit'} · ${frameTime(entry,kind).toFixed(2)} s · frame ${entry[`${kind}Frame`]}</figcaption><img src="${esc(entry[`${kind}Image`])}" alt="${esc(scene.title)} — ${esc(entry.label)} ${kind}"></figure>`).join('');
+      `<figure><figcaption>${kind === 'departure' ? 'Departure' : 'Revisit'} · ${frameTime(entry,kind).toFixed(2)} s · frame ${entry[`${kind}Frame`]}</figcaption><img src="${esc(mediaUrl(entry[`${kind}Image`]))}" alt="${esc(scene.title)} — ${esc(entry.label)} ${kind}"></figure>`).join('');
     $('pair-dialog').showModal();
   }
 
@@ -215,9 +241,9 @@
     card.dataset.method = entry.method;
     const aspect = `${entry.width} / ${entry.height}`;
     card.innerHTML = `<div class="method-heading"><span class="method-name">${esc(entry.label)}</span><span class="score" title="CLIP similarity of this method's evaluation frame pair">CLIP ↑<strong>${entry.clipScore.toFixed(3)}</strong></span></div>
-      <div class="video-wrap" style="aspect-ratio:${aspect}"><video src="${esc(entry.video)}" poster="${esc(entry.departureImage)}" preload="auto" muted playsinline aria-label="${esc(entry.label)} rollout for ${esc(scene.title)}"></video><span class="video-state">Loading…</span><button type="button" class="video-expand" aria-label="Enlarge ${esc(entry.label)} video" title="Full screen">⛶</button></div>
+      <div class="video-wrap" style="aspect-ratio:${aspect}"><video src="${esc(mediaUrl(entry.video))}" poster="${esc(mediaUrl(entry.departureImage))}" preload="auto" muted playsinline aria-label="${esc(entry.label)} rollout for ${esc(scene.title)}"></video><span class="video-state">Loading…</span><button type="button" class="video-expand" aria-label="Enlarge ${esc(entry.label)} video" title="Full screen">⛶</button></div>
       <div class="local-transport"><button type="button" class="local-play" aria-label="Play ${esc(entry.label)}">▶</button><input type="range" min="0" max="${(entry.frames-1)/entry.fps}" step="${1/entry.fps}" value="0" aria-label="Seek ${esc(entry.label)} video"><output>0.00</output></div>
-      <div class="pair-grid">${['departure','revisit'].map(kind => `<button type="button" class="pair-button" data-kind="${kind}" aria-label="Enlarge ${esc(entry.label)} departure and revisit frames"><span class="frame-label"><span>${kind === 'departure' ? 'Departure' : 'Revisit'}</span><time>${frameTime(entry,kind).toFixed(2)} s</time></span><img src="${esc(entry[`${kind}Image`])}" alt="${esc(entry.label)} ${kind} frame" style="aspect-ratio:${aspect}" decoding="async"></button>`).join('')}</div>`;
+      <div class="pair-grid">${['departure','revisit'].map(kind => `<button type="button" class="pair-button" data-kind="${kind}" aria-label="Enlarge ${esc(entry.label)} departure and revisit frames"><span class="frame-label"><span>${kind === 'departure' ? 'Departure' : 'Revisit'}</span><time>${frameTime(entry,kind).toFixed(2)} s</time></span><img src="${esc(mediaUrl(entry[`${kind}Image`]))}" alt="${esc(entry.label)} ${kind} frame" style="aspect-ratio:${aspect}" decoding="async"></button>`).join('')}</div>`;
     card.querySelectorAll('.pair-button').forEach(b => b.addEventListener('click', () => openPair(entry, scene)));
     return card;
   }
@@ -228,7 +254,7 @@
     try { history.replaceState(null, '', `#${p}`); } catch (_) { /* the page still works in restricted viewers */ }
   }
 
-  function render({time = 0} = {}) {
+  function render({time = 0, autoplay = true} = {}) {
     if (player) player.destroy();
     $('status').textContent = '';
     $('prompt-details').open = false;
@@ -259,6 +285,10 @@
     $('comparison').replaceChildren(...cards);
     player = new Playback(entries, cards);
     if (time > 0) player.seek(time);
+    const active = player, intent = active.intent;
+    if (autoplay) active.settled().then(ready => {
+      if (ready && !active.destroyed && intent === active.intent) active.playAll();
+    });
     document.title = `${scene.title} · MosaiChunk supplementary videos`;
     setHash();
   }
@@ -283,21 +313,22 @@
     }
   }));
   $('budget').addEventListener('change', () => {
-    const time = player.videos[0].currentTime;
-    state.budget = Number($('budget').value); render({time});
+    const time = player.videos[player.master].currentTime;
+    const autoplay = player.isPlaying();
+    state.budget = Number($('budget').value); render({time, autoplay});
   });
   $('scene-select').addEventListener('change', () => { state.scene = $('scene-select').value; render(); });
   $('previous').addEventListener('click', () => turnPage(-1));
   $('next').addEventListener('click', () => turnPage(1));
   $('play-all').addEventListener('click', () => player.toggle());
-  $('restart').addEventListener('click', () => { player.pauseAll(); player.seek(0); });
+  $('restart').addEventListener('click', async () => { const active=player; active.pauseAll(); active.seek(0); if(await active.settled()) active.playAll(); });
   $('sync').addEventListener('change', async () => {
     state.sync = $('sync').checked;
     if (state.sync) {
       const resume = player.isPlaying();
-      const time = player.videos[0].currentTime;
+      const time = player.videos[player.master].currentTime;
       player.pauseAll(); player.seek(time);
-      if (resume) { await player.settled(); player.playAll(); }
+      if (resume) { const active=player; if(await active.settled()) active.playAll(); }
     }
   });
   document.querySelectorAll('[data-rate]').forEach(b => b.addEventListener('click', () => {
@@ -319,7 +350,7 @@
     else if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
       e.preventDefault();
       const amount = (e.shiftKey ? 1/player.entries[0].fps : .5) * (e.code === 'ArrowLeft' ? -1 : 1);
-      player.pauseAll(); player.seek(player.videos[0].currentTime + amount);
+      player.pauseAll(); player.seek(player.videos[player.master].currentTime + amount);
     } else if (e.code === 'PageDown' || e.code === 'PageUp') {
       e.preventDefault(); turnPage(e.code === 'PageDown' ? 1 : -1);
     }

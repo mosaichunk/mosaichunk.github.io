@@ -9,8 +9,8 @@
   <link rel="stylesheet" href="assets/style.css">
   <link rel="icon" href="../assets/icon.svg?v=2" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/viewer-brand.css?v=20261001-openvdn">
-  <script src="assets/scenes.js?v=20261004-scene-titles" defer></script>
-  <script src="assets/app.js" defer></script>
+  <script src="assets/scenes.js?v=20261010-revisit" defer></script>
+  <script src="assets/app.js?v=20261010-revisit" defer></script>
   <link rel="stylesheet" href="../assets/brand.css?v=20261001-openvdn">
   <script src="../assets/brand.js?v=20261001" defer></script>
 </head>
@@ -23,7 +23,7 @@
     <main>
       <section class="viewer-guide" aria-labelledby="instructions-title">
         <h2 id="instructions-title">Instructions</h2>
-        <p>Choose a task, scene, and memory budget to compare synchronized rollouts. Below each video, the departure and revisit frames show the content before it leaves view and after it returns. <strong>CLIP ↑</strong> measures similarity between this frame pair; higher is better. The input prompt is collapsed at the bottom of the page. Due to space constraints, all videos were compressed while preserving the original frame rates and frame counts.</p>
+        <p>Choose a task, scene, and memory budget to compare synchronized rollouts. Below each video, the departure and revisit frames show the content before it leaves view and after it returns. <strong>CLIP ↑</strong> measures similarity between this frame pair; higher is better. The input prompt is collapsed at the bottom of the page. Each video starts at departure and ends at revisit. Shorter clips hold their final frame while the others finish. CLIP scores are unchanged.</p>
         <ul class="guide-controls" aria-label="Viewer controls">
           <li><kbd>Space</kbd> Play / pause</li>
           <li><kbd>A</kbd> / <kbd>D</kbd> Previous / next scene</li>
