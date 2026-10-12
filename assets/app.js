@@ -145,8 +145,14 @@
     $('#contact-caption').dataset.paperCopy=`contact-${task}`;
     $('.benchmark-detail').dataset.task=task;
     $('#prompt-interaction').hidden=!isT2V;$('#camera-interaction').hidden=isT2V;
-    if(isT2V)pauseCamera();else playCamera(true,true);
-    $('#contact-caption').textContent=isT2V?"Model-generated T2V frames when the prompt first reveals the object; 16 randomly sampled scenes.":"First frames of DL3DV videos used to condition I2V; 16 randomly sampled scenes.";
+    if(isT2V){pauseCamera();playPrompt(true,true);}
+    else{pausePrompt();playCamera(true,true);}
+    $('#benchmark-scenes-title').textContent=isT2V?'More T2V scenes':'More I2V scenes';
+    $('#benchmark-scenes-count').textContent=isT2V?'16 of 100 scenes':'16 of 150 scenes';
+    $('#benchmark-scenes-description').textContent=isT2V
+      ?'The same four-stage structure tests different objects and containers.'
+      :'The same return-to-view task spans indoor spaces and outdoor environments.';
+    $('#contact-caption').textContent=isT2V?'Model-generated frames when the prompt first reveals the object.':'Initial DL3DV frames used to condition generation.';
     $('#contact-sheet').replaceChildren(...DATA.benchmark[task].map(item=>{
       const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Enlarge ${item.label.toLowerCase()}`);
       const im=document.createElement('img');im.src=item.image;im.alt=item.label;im.loading='lazy';b.append(im);
@@ -158,6 +164,63 @@
     const image=$('img',button);
     button.addEventListener('click',()=>enlarge(image.src,`Prompt segment ${i+1} · ${image.alt}`));
   });
+
+  const promptRoot=$('#prompt-interaction'),promptPlay=$('#prompt-play'),promptSlider=$('#prompt-progress');
+  const promptStages=$$('.prompt-stages li'),promptSegments=$$('.prompt-schedule-track>span');
+  const promptSchedule=$('.prompt-schedule'),promptTime=$('#prompt-time');
+  const promptStarts=[0,3.6,6.2,11.2];
+  let promptSeconds=0,promptElapsed=0,promptRunning=false,promptFrame=0,promptLast=null;
+  let promptInView=false,promptUserPaused=false,promptActive=-1;
+  function renderPrompt(){
+    const active=promptStarts.reduce((stage,start,i)=>promptSeconds>=start?i:stage,0);
+    if(active!==promptActive){
+      promptActive=active;
+      promptStages.forEach((card,i)=>{
+        card.dataset.state=i<active?'complete':i===active?'current':'pending';
+        if(i===active)card.setAttribute('aria-current','step');else card.removeAttribute('aria-current');
+        promptSegments[i].dataset.state=card.dataset.state;
+      });
+    }
+    promptSchedule.style.setProperty('--prompt-progress',`${promptSeconds/16*100}%`);
+    promptSlider.value=String(promptSeconds);
+    promptSlider.setAttribute('aria-valuetext',`${promptSeconds.toFixed(1)} seconds: ${['Appear','Disappear','Hidden','Reappear'][active]}`);
+    const label=`${promptSeconds.toFixed(1)} / 16.0 s`;
+    if(promptTime.textContent!==label)promptTime.textContent=label;
+  }
+  function renderPromptPlayback(){
+    promptPlay.innerHTML=playbackButton(promptRunning?'pause':'play',promptRunning?'Pause':'Play');
+    promptPlay.setAttribute('aria-label',`${promptRunning?'Pause':'Play'} prompt schedule`);
+  }
+  function pausePrompt(){
+    promptRunning=false;cancelAnimationFrame(promptFrame);promptLast=null;renderPromptPlayback();
+  }
+  function tickPrompt(now){
+    if(!promptRunning)return;
+    if(promptLast!==null)promptElapsed=(promptElapsed+Math.min(now-promptLast,100))%9400;
+    promptLast=now;
+    promptSeconds=Math.max(0,Math.min(16,(promptElapsed-400)/500));
+    renderPrompt();promptFrame=requestAnimationFrame(tickPrompt);
+  }
+  function playPrompt(restart=false,automatic=false){
+    if(restart){pausePrompt();promptSeconds=0;promptElapsed=0;promptUserPaused=false;renderPrompt();}
+    if(promptRunning||promptRoot.hidden||document.hidden)return;
+    if(automatic&&(!promptInView||promptUserPaused||reducedMotion.matches))return;
+    promptRunning=true;promptLast=null;renderPromptPlayback();promptFrame=requestAnimationFrame(tickPrompt);
+  }
+  promptPlay.addEventListener('click',()=>{
+    if(promptRunning){promptUserPaused=true;pausePrompt();}
+    else{promptUserPaused=false;playPrompt();}
+  });
+  promptSlider.addEventListener('input',()=>{
+    promptUserPaused=true;pausePrompt();promptSeconds=Number(promptSlider.value);
+    promptElapsed=400+promptSeconds*500;renderPrompt();
+  });
+  new IntersectionObserver(entries=>{
+    promptInView=entries[0].isIntersecting;
+    if(promptInView)playPrompt(false,true);else pausePrompt();
+  },{threshold:0}).observe(promptRoot);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)pausePrompt();else playPrompt(false,true);});
+  reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)pausePrompt();else playPrompt(false,true);});
 
   const trajectorySpecs=[
     {key:'rot90',title:'90°',subtitle:'Turn away, return',cohort:'All 150 scenes'},

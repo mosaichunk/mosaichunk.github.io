@@ -512,3 +512,38 @@ figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);
  .prompt-schedule-track .hidden-interval{font-size:10px}.prompt-schedule-ticks{font-size:11px}
  #camera-interaction .camera-playback{flex-wrap:wrap;gap:12px}#camera-interaction .camera-timeline{flex-basis:100%;font-size:12px}
 }
+
+/* The T2V prompt advances through the four beats and loops with an end hold. */
+.prompt-stages li h4,.prompt-stages li h4 span,.prompt-stages li>p{transition:color .25s,background .25s}
+.prompt-stages .prompt-preview,.prompt-stages .benchmark-unknown{transition:opacity .4s,box-shadow .3s}
+.prompt-stages li[data-state="pending"] .prompt-preview,.prompt-stages li[data-state="pending"] .benchmark-unknown{opacity:.2}
+.prompt-stages li[data-state="current"] h4,.prompt-stages li[data-state="current"]>p{color:#28765c}
+.prompt-stages li[data-state="current"] h4 span{color:#fff;background:#28765c}
+.prompt-stages li[data-state="current"] .prompt-preview,.prompt-stages li[data-state="current"] .benchmark-unknown{box-shadow:0 0 0 3px #4d9571}
+.prompt-schedule-track{position:relative;isolation:isolate}
+.prompt-schedule-track>span{transition:background .25s,color .25s}
+.prompt-schedule-track>span[data-state="complete"]{background:#dae9df}
+.prompt-schedule-track>span[data-state="current"]{background:#a4cbb3;color:#204e35}
+.prompt-playhead{position:absolute;left:var(--prompt-progress,0%);top:-6px;bottom:-6px;width:3px;transform:translateX(-50%);background:#234f38;pointer-events:none}
+.prompt-playhead::before{content:'';position:absolute;top:-3px;left:50%;transform:translateX(-50%);width:9px;height:9px;border-radius:50%;background:#234f38}
+#prompt-progress{position:absolute;inset:-8px 0;width:100%;height:48px;margin:0;opacity:0;cursor:ew-resize}
+.prompt-schedule-track:focus-within{outline:2px solid #478b6a;outline-offset:9px;border-radius:6px}
+.prompt-playback{display:flex;align-items:center;gap:14px;margin-top:14px}
+.prompt-time{margin-left:auto;font-variant-numeric:tabular-nums;font-size:14px;color:#688071}
+.prompt-speed{font-size:13px;color:#688071;background:#eaf1ed;border-radius:5px;padding:2px 7px}
+@media(prefers-reduced-motion:reduce){.prompt-stages li[data-state="pending"] .prompt-preview,.prompt-stages li[data-state="pending"] .benchmark-unknown{opacity:1}}
+
+/* Scene coverage continues the selected benchmark within the same card. */
+.benchmark-scenes{border-top:1px solid #dfe8e2;padding-top:24px;margin-top:4px;text-align:left;min-width:0}
+.benchmark-scenes-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.benchmark-scenes-heading h3{margin:0;color:#355844;font-family:var(--font-body);font-size:22px;font-weight:600;line-height:1.4;letter-spacing:0}
+.benchmark-scenes-heading>span{flex:none;padding:4px 9px;border-radius:6px;background:#eaf1ed;color:#668471;font-size:13px}
+#benchmark-scenes-description{margin:0 0 18px;font-size:17px;line-height:1.6;color:#6c7c72}
+.benchmark-scenes .contact-sheet{gap:10px}
+.benchmark-scenes #contact-caption{margin:14px 0 0;text-align:left;font-size:14px;line-height:1.5;color:#7c8b81}
+@media(max-width:520px){
+ .benchmark-scenes{padding-top:20px;margin-top:0}.benchmark-scenes-heading{gap:8px}
+ .benchmark-scenes-heading h3{font-size:18px}.benchmark-scenes-heading>span{font-size:10px;padding:4px 6px}
+ #benchmark-scenes-description{font-size:14px;margin-bottom:14px}.benchmark-scenes .contact-sheet{gap:8px}
+ .benchmark-scenes #contact-caption{font-size:12px}
+}

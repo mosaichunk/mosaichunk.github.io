@@ -9,12 +9,12 @@
   <link rel="icon" href="assets/icon.svg?v=2" type="image/svg+xml">
   <link rel="stylesheet" href="assets/fonts.css?v=20261001-openvdn">
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css?v=0.18.10">
-  <link rel="stylesheet" href="assets/site.css?v=20261012-benchmark">
+  <link rel="stylesheet" href="assets/site.css?v=20261012-prompt-motion">
   <script src="assets/data.js?v=20261010-revisit" defer></script>
   <script src="assets/vendor/katex/katex.min.js?v=0.18.10" defer></script>
   <script src="assets/math.js?v=20261001-teaser-history" defer></script>
   <script src="assets/benchmark-trajectories.js?v=20261012" defer></script>
-  <script src="assets/app.js?v=20261012-benchmark" defer></script>
+  <script src="assets/app.js?v=20261012-prompt-motion" defer></script>
   <link rel="stylesheet" href="assets/brand.css?v=20261001-openvdn">
   <script src="assets/brand.js?v=20261001" defer></script>
 </head>
@@ -153,9 +153,10 @@
             <li><h4><span>4</span>Reappear</h4><div class="benchmark-unknown" role="img" aria-label="Unknown revisit frame to evaluate">?</div><p>“wide open again”</p></li>
           </ol>
           <div class="prompt-schedule" aria-label="Prompt transitions at 3.6, 6.2 and 11.2 seconds; hidden interval lasts five seconds">
-            <div class="prompt-schedule-track"><span style="flex:3.6"></span><span style="flex:2.6"></span><span class="hidden-interval" style="flex:5">Out of sight · 5 s</span><span style="flex:4.8"></span></div>
+            <div class="prompt-schedule-track"><span style="flex:3.6"></span><span style="flex:2.6"></span><span class="hidden-interval" style="flex:5">Out of sight · 5 s</span><span style="flex:4.8"></span><i class="prompt-playhead" aria-hidden="true"></i><input id="prompt-progress" type="range" min="0" max="16" step="0.01" value="0" aria-label="Prompt schedule progress in seconds"></div>
             <div class="prompt-schedule-ticks"><span style="--position:0%">0 s</span><span style="--position:22.5%">3.6</span><span style="--position:38.75%">6.2</span><span style="--position:70%">11.2</span><span style="--position:100%">16 s</span></div>
           </div>
+          <div class="prompt-playback"><button class="play-button" id="prompt-play" aria-label="Play prompt schedule">Play</button><span class="prompt-time" id="prompt-time">0.0 / 16.0 s</span><span class="prompt-speed">2×</span></div>
           <p class="benchmark-insight">The object stays hidden longer than the recent context. We evaluate what returns.</p>
         </div>
         <div class="benchmark-interaction" id="camera-interaction" hidden>
@@ -164,13 +165,17 @@
           <div class="camera-playback"><button class="play-button" id="camera-play" aria-label="Play all four camera trajectories"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-play"/></svg> <span>Play all</span></button><label class="camera-timeline"><span>Departure</span><input type="range" id="camera-progress" min="0" max="100" step="0.1" value="0" aria-label="Shared camera trajectory progress"><span>Revisit</span></label></div>
           <p class="benchmark-insight"><span class="pose-legend"><i></i>Initial pose <i></i>Current pose</span>Every path returns to its starting position and orientation.</p>
         </div>
+        <div class="benchmark-scenes" aria-labelledby="benchmark-scenes-title">
+          <div class="benchmark-scenes-heading"><h3 id="benchmark-scenes-title">More T2V scenes</h3><span id="benchmark-scenes-count">16 of 100 scenes</span></div>
+          <p id="benchmark-scenes-description">The same four-stage structure tests different objects and containers.</p>
+          <div class="contact-sheet" id="contact-sheet" aria-label="Benchmark example frames"></div>
+          <p class="figure-note" id="contact-caption" data-paper-copy="contact-t2v">Model-generated frames when the prompt first reveals the object.</p>
+        </div>
       </div>
       <details class="copy-details"><summary>Benchmark protocol</summary><div class="copy-details-body">
 <p class="figure-intro" id="benchmark-split-details" data-paper-copy="benchmark-t2v-details">The split contains 100 samples with scenarios disjoint from router training. Each model input extends Ring Forcing's three-stage appear–disappear–reappear design to four prompt segments, with a separate segment keeping the object out of sight. The nominal prompt transitions occur at 3.6, 6.2, and 11.2 seconds. The third segment therefore requests five seconds with the object out of sight, exceeding the largest sliding-window baseline's approximately three seconds of recent context.</p>
       </div></details>
-      <div class="subsection-heading diversity-heading"><h3>Visual diversity</h3></div>
-      <div class="contact-sheet" id="contact-sheet" aria-label="Benchmark example frames"></div>
-      <p class="figure-note" id="contact-caption" data-paper-copy="contact-t2v">Model-generated T2V frames when the prompt first reveals the object; 16 randomly sampled scenes.</p>
+
     </section>
 
     <section id="results" class="section results-section">
