@@ -220,10 +220,21 @@
     const defaultReadout='Hover or focus a point for its method, memory budget, and score.';
     readout.textContent=defaultReadout;
     const metrics=[
-      {key:'clip',index:0,min:.70,max:1,ticks:[.70,.80,.90,1]},
-      {key:'lpips',index:1,min:.48,max:.68,ticks:[.50,.55,.60,.65]}
+      {key:'clip',index:0},
+      {key:'lpips',index:1}
     ];
     metrics.forEach(metric=>{
+      const series=rows.map(row=>({method:row.method,points:[
+        [1,row.values[metric.index]],[2,row.values[4+metric.index]],
+        ...(row.method==='Ours'?fractional[metric.key]:[])
+      ].sort((a,b)=>a[0]-b[0])}));
+      // Bound each visible metric to the enclosing 0.05 multiples.
+      // Use integer tick indices to avoid floating-point rounding drift.
+      const values=series.flatMap(({points})=>points.map(([,value])=>value));
+      const firstTick=Math.floor(Math.min(...values)*20+1e-9);
+      const lastTick=Math.max(firstTick+1,Math.ceil(Math.max(...values)*20-1e-9));
+      metric.min=firstTick/20;metric.max=lastTick/20;
+      metric.ticks=Array.from({length:lastTick-firstTick+1},(_,i)=>(firstTick+i)/20);
       const chart=$(`[data-chart-metric="${metric.key}"]`);chart.replaceChildren();
       const left=48,right=424,top=14,bottom=156;
       const x=budget=>left+(budget-.5)/1.5*(right-left);
@@ -234,10 +245,6 @@
       [.5,1,1.5,2].forEach(budget=>{
         chart.append(svg('line',{x1:x(budget),x2:x(budget),y1:top,y2:bottom,stroke:'#f0f2f4'}),svg('text',{x:x(budget),y:184,'text-anchor':'middle',fill:'#7d8995','font-size':13},String(budget)));
       });
-      const series=rows.map(row=>({method:row.method,points:[
-        [1,row.values[metric.index]],[2,row.values[4+metric.index]],
-        ...(row.method==='Ours'?fractional[metric.key]:[])
-      ].sort((a,b)=>a[0]-b[0])}));
       // Lines guide the eye between measured points. No fractional Base or MoC
       // results are synthesized or plotted.
       series.forEach(({method,points})=>{
