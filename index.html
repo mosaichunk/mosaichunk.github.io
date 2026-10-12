@@ -9,11 +9,12 @@
   <link rel="icon" href="assets/icon.svg?v=2" type="image/svg+xml">
   <link rel="stylesheet" href="assets/fonts.css?v=20261001-openvdn">
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css?v=0.18.10">
-  <link rel="stylesheet" href="assets/site.css?v=20261004-scene-titles">
+  <link rel="stylesheet" href="assets/site.css?v=20261012-benchmark">
   <script src="assets/data.js?v=20261010-revisit" defer></script>
   <script src="assets/vendor/katex/katex.min.js?v=0.18.10" defer></script>
   <script src="assets/math.js?v=20261001-teaser-history" defer></script>
-  <script src="assets/app.js?v=20261012-chart-bounds" defer></script>
+  <script src="assets/benchmark-trajectories.js?v=20261012" defer></script>
+  <script src="assets/app.js?v=20261012-benchmark" defer></script>
   <link rel="stylesheet" href="assets/brand.css?v=20261001-openvdn">
   <script src="assets/brand.js?v=20261001" defer></script>
 </head>
@@ -146,17 +147,22 @@
         <h3 class="benchmark-title">Model input: <span id="benchmark-input">Prompt</span></h3>
         <div class="benchmark-interaction" id="prompt-interaction">
           <ol class="prompt-stages" aria-label="Four prompt segments">
-            <li><h4><span>1</span>Appears</h4><button class="prompt-preview" aria-label="Enlarge the Appears frame"><img alt="The object appears" loading="lazy"></button></li>
-            <li><h4><span>2</span>Disappears</h4><button class="prompt-preview" aria-label="Enlarge the Disappears frame"><img alt="The object disappears" loading="lazy"></button></li>
-            <li><h4><span>3</span>Out of sight</h4><button class="prompt-preview" aria-label="Enlarge the Out of sight frame"><img alt="The object remains out of sight" loading="lazy"></button></li>
-            <li><h4><span>4</span>Reappears</h4><button class="prompt-preview" aria-label="Enlarge the Reappears frame"><img alt="The object reappears" loading="lazy"></button></li>
+            <li><h4><span>1</span>Appear</h4><button class="prompt-preview" aria-label="Enlarge the open cabinet"><img src="assets/benchmark/larder-appear.webp" alt="Preserve jars inside the open cabinet" loading="lazy"></button><p>“wide open”</p></li>
+            <li><h4><span>2</span>Disappear</h4><button class="prompt-preview" aria-label="Enlarge the closing cabinet"><img src="assets/benchmark/larder-disappear.webp" alt="The cabinet doors close" loading="lazy"></button><p>“closes completely”</p></li>
+            <li><h4><span>3</span>Hidden</h4><button class="prompt-preview" aria-label="Enlarge the closed cabinet"><img src="assets/benchmark/larder-hidden.webp" alt="The cabinet stays closed and the jars remain out of sight" loading="lazy"></button><p>“completely closed”</p></li>
+            <li><h4><span>4</span>Reappear</h4><div class="benchmark-unknown" role="img" aria-label="Unknown revisit frame to evaluate">?</div><p>“wide open again”</p></li>
           </ol>
+          <div class="prompt-schedule" aria-label="Prompt transitions at 3.6, 6.2 and 11.2 seconds; hidden interval lasts five seconds">
+            <div class="prompt-schedule-track"><span style="flex:3.6"></span><span style="flex:2.6"></span><span class="hidden-interval" style="flex:5">Out of sight · 5 s</span><span style="flex:4.8"></span></div>
+            <div class="prompt-schedule-ticks"><span style="--position:0%">0 s</span><span style="--position:22.5%">3.6</span><span style="--position:38.75%">6.2</span><span style="--position:70%">11.2</span><span style="--position:100%">16 s</span></div>
+          </div>
+          <p class="benchmark-insight">The object stays hidden longer than the recent context. We evaluate what returns.</p>
         </div>
         <div class="benchmark-interaction" id="camera-interaction" hidden>
-          <div class="camera-settings"><div class="control-group"><span class="control-label">Rotation</span><div class="segmented compact" id="camera-angle" role="group" aria-label="Camera rotation"><button data-value="90" aria-pressed="false">90°</button><button data-value="180" aria-pressed="true">180°</button><button data-value="360" aria-pressed="false">360°</button></div></div><label class="checkbox-label"><input type="checkbox" id="camera-translation">Translation</label></div>
-          <svg id="camera-svg" viewBox="0 0 420 152" role="img" aria-label="Schematic input camera trajectory"><defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#e8e9eb"/></pattern></defs><rect width="420" height="152" fill="url(#grid)"/><path id="camera-path" d="M115 76H300" stroke="#c6cdd6" stroke-dasharray="4 5" fill="none"/><g transform="translate(115 76)"><path d="M0 0 50-25V25Z" fill="#edf0f5" stroke="#b1bbc9"/><circle r="5" fill="#b1bbc9"/></g><g id="camera-pose" transform="translate(115 76)"><path d="M0 0 50-25V25Z" fill="#e9ba5660" stroke="#b88930"/><circle r="6" fill="#996b1c"/></g></svg>
-          <div class="camera-playback"><button class="play-button" id="camera-play" aria-label="Play camera trajectory"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-play"/></svg> <span>Play</span></button><label class="camera-timeline">Departure<input type="range" id="camera-progress" min="0" max="100" step="0.1" value="0" aria-label="Camera trajectory progress">Revisit</label></div>
-          <p class="figure-note">Input camera trajectory · schematic</p>
+          <div class="trajectory-input"><img src="assets/benchmark/storefront-input.webp" alt="Initial storefront frame used to condition the video" loading="lazy"><div><span class="trajectory-eyebrow">The same starting view</span><p>Change the camera path. Return to the initial pose.</p><span class="trajectory-input-note">150 scenes · 50 indoor, 100 outdoor</span></div></div>
+          <div class="trajectory-grid" id="trajectory-grid" aria-label="Four input camera trajectories playing together"></div>
+          <div class="camera-playback"><button class="play-button" id="camera-play" aria-label="Play all four camera trajectories"><svg class="playback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-play"/></svg> <span>Play all</span></button><label class="camera-timeline"><span>Departure</span><input type="range" id="camera-progress" min="0" max="100" step="0.1" value="0" aria-label="Shared camera trajectory progress"><span>Revisit</span></label></div>
+          <p class="benchmark-insight"><span class="pose-legend"><i></i>Initial pose <i></i>Current pose</span>Every path returns to its starting position and orientation.</p>
         </div>
       </div>
       <details class="copy-details"><summary>Benchmark protocol</summary><div class="copy-details-body">

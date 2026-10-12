@@ -133,7 +133,7 @@
   // camera path. Reconstructed evaluation poses are not implied by this view.
   function renderBenchmark(task){
     const isT2V=task==='t2v';
-    $('#benchmark-input').textContent=isT2V?'Prompt':'Initial frame, prompt, and camera trajectory';
+    $('#benchmark-input').textContent=isT2V?'Four-stage prompt':'Initial frame + prompt + camera trajectory';
     $('#benchmark-split-details').textContent=isT2V
       ? "The split contains 100 samples with scenarios disjoint from router training. Each model input extends Ring Forcing's three-stage appear–disappear–reappear design to four prompt segments, with a separate segment keeping the object out of sight. The nominal prompt transitions occur at 3.6, 6.2, and 11.2 seconds. The third segment therefore requests five seconds with the object out of sight, exceeding the largest sliding-window baseline's approximately three seconds of recent context."
       : "The split contains 150 scenes: 50 indoor and 100 outdoor. Each model input includes an initial frame from DL3DV, a prompt describing the scene, and a camera trajectory. We sample more diverse camera trajectories not seen during training: all 150 scenes have in-place rotation trajectories with 90°, 180°, and 360° settings. The 100 outdoor scenes additionally have trajectories combining these rotations with translation. For 90° and 180°, yaw increases linearly to the specified angle at the midpoint and then reverses to its initial value. The 360° trajectory instead completes one continuous full turn. Each input camera trajectory ends at its initial position and orientation.";
@@ -154,58 +154,84 @@
     }));
   }
   $$('#benchmark-tabs button').forEach(button=>button.addEventListener('click',()=>{pressed($$('#benchmark-tabs button'),button);renderBenchmark(button.dataset.task);}));
-  const beatIndices=[0,1,2,4];
-  const promptFrame=DATA.qualitative[0].rows.find(r=>r.method==='MosaiChunk').frames;
   $$('.prompt-preview').forEach((button,i)=>{
-    const image=$('img',button);image.src=promptFrame[beatIndices[i]];
+    const image=$('img',button);
     button.addEventListener('click',()=>enlarge(image.src,`Prompt segment ${i+1} · ${image.alt}`));
   });
 
+  const trajectorySpecs=[
+    {key:'rot90',title:'90°',subtitle:'Turn away, return',cohort:'All 150 scenes'},
+    {key:'rot180',title:'180°',subtitle:'Turn away, return',cohort:'All 150 scenes'},
+    {key:'rot360',title:'360°',subtitle:'One full turn',cohort:'All 150 scenes'},
+    {key:'wt',title:'180° + move',subtitle:'Walk, turn, return',cohort:'100 outdoor scenes'}
+  ];
+  const trajectoryCards=trajectorySpecs.map(spec=>{
+    const card=document.createElement('article');card.className='trajectory-card';card.dataset.trajectory=spec.key;
+    const baseY=spec.key==='wt'?174:138;
+    card.innerHTML=`<div class="trajectory-card-heading"><h4>${spec.title}</h4><p>${spec.subtitle}</p></div>
+      <svg class="trajectory-diagram" viewBox="0 0 240 240" role="img" aria-label="${spec.title} input camera path; ends at the initial pose">
+        <defs><pattern id="trajectory-grid-${spec.key}" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#e5ece8" stroke-width=".8"/></pattern></defs>
+        <rect x="0" y="0" width="240" height="240" rx="12" fill="url(#trajectory-grid-${spec.key})"/>
+        ${spec.key==='wt'?'<path d="M120 174V73" fill="none" stroke="#a8bfb1" stroke-width="2" stroke-dasharray="4 5"/>':`<circle cx="120" cy="${baseY}" r="48" fill="none" stroke="#d8e4dd" stroke-dasharray="3 5"/>`}
+        <g transform="translate(120 ${baseY})"><path d="M0 0L-31-72Q0-86 31-72Z" fill="#e4ebe7" stroke="#becfc4" stroke-width="2"/><circle r="6" fill="#bdcdc3"/></g>
+        <g class="trajectory-pose" transform="translate(120 ${baseY})"><path d="M0 0L-31-72Q0-86 31-72Z" fill="#abd0ba" fill-opacity=".75" stroke="#377d60" stroke-width="2.5" stroke-linejoin="round"/><rect x="-9" y="-7" width="18" height="14" rx="4" fill="#28765c"/><circle cy="-1" r="3" fill="white"/></g>
+      </svg><div class="trajectory-status"><span class="trajectory-phase">Departure</span><span class="trajectory-yaw">0°</span></div><p class="trajectory-cohort">${spec.cohort}</p>`;
+    $('#trajectory-grid').append(card);
+    return {spec,baseY,poses:window.BENCHMARK_TRAJECTORIES.find(p=>p.key===spec.key).poses,
+      pose:$('.trajectory-pose',card),phase:$('.trajectory-phase',card),yaw:$('.trajectory-yaw',card)};
+  });
   const cameraSlider=$('#camera-progress'),cameraPlay=$('#camera-play');
-  let cameraAngle=180,cameraProgress=0,cameraRunning=false,cameraFrame=0,cameraLastTime=null;
-  const cameraDuration=4000;
+  let cameraProgress=0,cameraRunning=false,cameraFrame=0,cameraLastTime=null,cameraElapsed=0;
+  let cameraInView=false,cameraUserPaused=false;
+  const cameraDuration=8000,cameraStartHold=400,cameraCycle=9200;
   function renderCamera(){
     const t=cameraProgress;
-    const angle=cameraAngle;
-    const progress=angle===360?t:1-Math.abs(2*t-1);
-    const yaw=angle*progress;
-    const translation=$('#camera-translation').checked?185*(1-Math.abs(2*t-1)):0;
-    $('#camera-pose').setAttribute('transform',`translate(${115+translation} 76) rotate(${-yaw})`);
-    $('#camera-path').style.opacity=$('#camera-translation').checked?'1':'.2';
-    $('#camera-svg').setAttribute('aria-label',`Schematic ${angle} degree input trajectory, ${Math.round(t*100)} percent complete${$('#camera-translation').checked?', with translation':''}`);
-    cameraSlider.value=String(t*100);
+    trajectoryCards.forEach(record=>{
+      const index=t*(record.poses.length-1),lo=Math.floor(index),hi=Math.min(lo+1,record.poses.length-1),mix=index-lo;
+      const yaw=record.poses[lo][0]*(1-mix)+record.poses[hi][0]*mix;
+      const move=record.poses[lo][1]*(1-mix)+record.poses[hi][1]*mix;
+      record.pose.setAttribute('transform',`translate(120 ${record.baseY-move*56}) rotate(${-yaw})`);
+      const angle=`${Math.max(0,Math.round(yaw))}°`;
+      if(record.yaw.textContent!==angle)record.yaw.textContent=angle;
+      const phase=t<=.001?'Departure':t>=.999?'Revisit':record.spec.key==='rot360'?'Full turn':t<=.5?'Moving away':'Returning';
+      if(record.phase.textContent!==phase)record.phase.textContent=phase;
+    });
+    cameraSlider.value=String(cameraProgress*100);
   }
   function renderCameraPlayback(){
-    const label=cameraRunning?'Pause':cameraProgress>=1?'Replay':'Play';
-    cameraPlay.innerHTML=playbackButton(cameraRunning?'pause':cameraProgress>=1?'replay':'play',label);
-    cameraPlay.setAttribute('aria-label',`${label} camera trajectory`);
+    cameraPlay.innerHTML=playbackButton(cameraRunning?'pause':'play',cameraRunning?'Pause all':'Play all');
+    cameraPlay.setAttribute('aria-label',`${cameraRunning?'Pause':'Play'} all four camera trajectories`);
   }
   function pauseCamera(){
-    cameraRunning=false;cancelAnimationFrame(cameraFrame);cameraLastTime=null;
-    renderCameraPlayback();
+    cameraRunning=false;cancelAnimationFrame(cameraFrame);cameraLastTime=null;renderCameraPlayback();
   }
   function tickCamera(now){
     if(!cameraRunning)return;
-    if(cameraLastTime!==null)cameraProgress=Math.min(1,cameraProgress+Math.min(now-cameraLastTime,100)/cameraDuration);
-    cameraLastTime=now;renderCamera();
-    if(cameraProgress>=1)return pauseCamera();
-    cameraFrame=requestAnimationFrame(tickCamera);
+    if(cameraLastTime!==null)cameraElapsed=(cameraElapsed+Math.min(now-cameraLastTime,100))%cameraCycle;
+    cameraLastTime=now;
+    cameraProgress=Math.max(0,Math.min(1,(cameraElapsed-cameraStartHold)/cameraDuration));
+    renderCamera();cameraFrame=requestAnimationFrame(tickCamera);
   }
   function playCamera(restart=false,automatic=false){
-    pauseCamera();
-    if(restart||cameraProgress>=1)cameraProgress=0;
-    renderCamera();renderCameraPlayback();
-    // Reduced-motion visitors can start playback explicitly. Switching away
-    // cancels the same timeline, so returning never creates a second loop.
-    if($('#camera-interaction').hidden||document.hidden||(automatic&&reducedMotion.matches))return;
-    cameraRunning=true;renderCameraPlayback();cameraFrame=requestAnimationFrame(tickCamera);
+    if(restart){pauseCamera();cameraProgress=0;cameraElapsed=0;cameraUserPaused=false;renderCamera();}
+    if(cameraRunning||$('#camera-interaction').hidden||document.hidden)return;
+    if(automatic&&(!cameraInView||cameraUserPaused||reducedMotion.matches))return;
+    cameraRunning=true;cameraLastTime=null;renderCameraPlayback();cameraFrame=requestAnimationFrame(tickCamera);
   }
-  cameraPlay.addEventListener('click',()=>{if(cameraRunning)pauseCamera();else playCamera();});
-  cameraSlider.addEventListener('input',()=>{cameraProgress=Number(cameraSlider.value)/100;pauseCamera();renderCamera();});
-  $('#camera-translation').addEventListener('change',()=>playCamera(true,true));
-  bindSelection('camera-angle',value=>{cameraAngle=Number(value);playCamera(true,true);});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseCamera();});
-  reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)pauseCamera();});
+  cameraPlay.addEventListener('click',()=>{
+    if(cameraRunning){cameraUserPaused=true;pauseCamera();}
+    else{cameraUserPaused=false;playCamera();}
+  });
+  cameraSlider.addEventListener('input',()=>{
+    cameraUserPaused=true;pauseCamera();cameraProgress=Number(cameraSlider.value)/100;
+    cameraElapsed=cameraStartHold+cameraProgress*cameraDuration;renderCamera();
+  });
+  new IntersectionObserver(entries=>{
+    cameraInView=entries[0].isIntersecting;
+    if(cameraInView)playCamera(false,true);else pauseCamera();
+  },{threshold:0}).observe($('#camera-interaction'));
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseCamera();else playCamera(false,true);});
+  reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)pauseCamera();else playCamera(false,true);});
 
   const state={task:'t2v',trajectory:'rotation'};
   const resultKey=()=>state.task==='t2v'?'t2v':state.trajectory;
