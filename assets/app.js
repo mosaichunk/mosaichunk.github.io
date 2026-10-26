@@ -741,6 +741,20 @@
   });
   window.addEventListener('resize',()=>snapshots.forEach(state=>state.captures.filter(capture=>capture.captured).forEach(settleCapture)));
 
+  // Download counts are read live from the Hugging Face Hub; the pill stays plain if the request fails.
+  $$('[data-hf-repo]').forEach(link=>{
+    fetch(`https://huggingface.co/api/${link.dataset.hfRepo}?expand%5B%5D=downloadsAllTime`)
+      .then(response=>response.ok?response.json():Promise.reject(response.status))
+      .then(({downloadsAllTime:count})=>{
+        if(!(count>0))return;
+        const label=count.toLocaleString('en-US');
+        $('.pill-count span',link).textContent=label;
+        $('.pill-count',link).hidden=false;
+        link.setAttribute('aria-label',`${link.getAttribute('aria-label')}, ${label} downloads`);
+      })
+      .catch(()=>{});
+  });
+
   renderBenchmark('t2v');renderCamera();renderResults();renderVideos();
   window.PAPER_MATH.render(document);
 })();

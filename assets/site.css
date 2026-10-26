@@ -547,3 +547,8 @@ figcaption{width:100%;max-width:none;text-align:left;font-size:var(--copy-size);
  #benchmark-scenes-description{font-size:14px;margin-bottom:14px}.benchmark-scenes .contact-sheet{gap:8px}
  .benchmark-scenes #contact-caption{font-size:12px}
 }
+
+/* Live Hugging Face download count inside a resource pill. */
+.pill-count{display:inline-flex;align-items:center;gap:3px;margin-left:3px;padding:4px 9px 4px 7px;border-radius:999px;background:rgba(255,255,255,.15);font-size:.78em;font-variant-numeric:tabular-nums}
+.pill-count[hidden]{display:none}
+.pill .pill-count svg{width:.95em;height:.95em;stroke-width:2.2}

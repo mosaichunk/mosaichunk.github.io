@@ -9,12 +9,12 @@
   <link rel="icon" href="assets/icon.svg?v=2" type="image/svg+xml">
   <link rel="stylesheet" href="assets/fonts.css?v=20261001-openvdn">
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css?v=0.18.10">
-  <link rel="stylesheet" href="assets/site.css?v=20261012-prompt-motion">
+  <link rel="stylesheet" href="assets/site.css?v=20261026-hf-downloads">
   <script src="assets/data.js?v=20261010-revisit" defer></script>
   <script src="assets/vendor/katex/katex.min.js?v=0.18.10" defer></script>
   <script src="assets/math.js?v=20261001-teaser-history" defer></script>
   <script src="assets/benchmark-trajectories.js?v=20261012" defer></script>
-  <script src="assets/app.js?v=20261012-prompt-motion" defer></script>
+  <script src="assets/app.js?v=20261026-hf-downloads" defer></script>
   <link rel="stylesheet" href="assets/brand.css?v=20261001-openvdn">
   <script src="assets/brand.js?v=20261001" defer></script>
 </head>
@@ -25,6 +25,7 @@
     <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 20"/></symbol>
     <symbol id="i-weights" viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5ZM3 7v10l9 5 9-5V7M12 12v10"/></symbol>
     <symbol id="i-data" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12m-5-5 5 5 5-5M5 20h14"/></symbol>
     <symbol id="i-video" viewBox="0 0 24 24"><rect x="2" y="5" width="15" height="14" rx="3"/><path d="m17 10 5-3v10l-5-3M8 9l4 3-4 3Z"/></symbol>
     <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z"/></symbol>
@@ -53,7 +54,7 @@
       <a class="pill" href="https://arxiv.org/abs/2610.02153" target="_blank" rel="noopener"><span class="arxiv-icon">χ</span>arXiv</a>
       <a class="pill" href="https://github.com/mosaichunk/MosaiChunk" target="_blank" rel="noopener" aria-label="Code on GitHub"><svg><use href="#i-code"/></svg>Code</a>
       <a class="pill" href="https://huggingface.co/mosaichunk/MosaiChunk" target="_blank" rel="noopener" aria-label="MosaiChunk weights on Hugging Face"><svg><use href="#i-weights"/></svg>Weights</a>
-      <a class="pill" href="https://huggingface.co/datasets/mosaichunk/RememBench" target="_blank" rel="noopener" aria-label="RememBench data on Hugging Face"><svg aria-hidden="true"><use href="#i-data"/></svg>Data</a>
+      <a class="pill" href="https://huggingface.co/datasets/mosaichunk/RememBench" target="_blank" rel="noopener" aria-label="RememBench data on Hugging Face" data-hf-repo="datasets/mosaichunk/RememBench"><svg aria-hidden="true"><use href="#i-data"/></svg>Data<span class="pill-count" aria-hidden="true" hidden><svg><use href="#i-download"/></svg><span></span></span></a>
       <a class="pill visualization-link" href="viewer/video.html" target="_blank" rel="noopener"><svg><use href="#i-video"/></svg>Video Viewer</a>
     </nav>
   </header>
