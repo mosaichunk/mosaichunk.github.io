@@ -747,10 +747,9 @@
       .then(response=>response.ok?response.json():Promise.reject(response.status))
       .then(({downloadsAllTime:count})=>{
         if(!(count>0))return;
-        const label=count.toLocaleString('en-US');
-        $('.pill-count span',link).textContent=label;
+        $('.pill-count span',link).textContent=count<1000?String(count):new Intl.NumberFormat('en-US',{notation:'compact',minimumFractionDigits:1,maximumFractionDigits:1}).format(count);
         $('.pill-count',link).hidden=false;
-        link.setAttribute('aria-label',`${link.getAttribute('aria-label')}, ${label} downloads`);
+        link.setAttribute('aria-label',`${link.getAttribute('aria-label')}, ${count.toLocaleString('en-US')} downloads`);
       })
       .catch(()=>{});
   });
